@@ -1136,7 +1136,7 @@ export default function HomePage() {
             fontSize: headerFontSize,
             fontFamily: '"Press Start 2P", monospace',
           }}>
-            {isMobile ? 'OCF' : 'clawharbor'}
+            {isMobile ? 'harbor' : 'clawharbor'}
           </h1>
           <span style={{
             fontSize: isMobile ? 8 : 10,
