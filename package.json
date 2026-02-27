@@ -1,0 +1,57 @@
+{
+  "name": "clawharbor",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Virtual office for your AI agents \u2014 pixel art NPCs, water cooler chat, quest log, XP & leveling. The Sims meets AI ops.",
+  "keywords": [
+    "openclaw",
+    "ai-agents",
+    "dashboard",
+    "virtual-office",
+    "agent-collaboration",
+    "async-teams",
+    "retro",
+    "pixel-art",
+    "sims-style",
+    "agent-monitoring",
+    "multi-agent",
+    "agent-management",
+    "developer-tools",
+    "productivity"
+  ],
+  "license": "AGPL-3.0",
+  "author": "OpenClaw Community",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/clawharbor/clawharbor"
+  },
+  "bin": {
+    "clawharbor": "./bin/clawharbor.js"
+  },
+  "scripts": {
+    "dev": "next dev -p 3333 --turbopack",
+    "build": "next build",
+    "start": "next start -p 3333",
+    "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint:style": "bash scripts/lint-style.sh"
+  },
+  "dependencies": {
+    "next": "^15.1.0",
+    "puppeteer-core": "^24.37.5",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "ws": "^8.19.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/ws": "^8.18.1",
+    "@vitejs/plugin-react": "^5.1.4",
+    "typescript": "^5",
+    "vitest": "^4.0.18"
+  },
+  "homepage": "https://clawharbor.work"
+}
