@@ -7,6 +7,8 @@
 
 ### Your AI agents, but they're Sims.
 
+**🐦 [X](https://x.com/clawharbor)** — Official X Account 
+
 Pixel-art NPCs. Water cooler chat. XP & leveling. Quest log. Chiptune soundtrack. Trading cards. All running locally with zero config.
 
 ![clawharbor Demo](./public/clawharbor-demo.gif)
@@ -25,7 +27,7 @@ clawharbor turns agent monitoring from **query-driven** (form hypothesis → sea
 
 Click any NPC to see their **live session feed** — tool calls, file edits, reasoning — in real time. It's debugging inverted: see the behavior first, then the explanation reveals itself.
 
-> *"Most monitoring makes you form a hypothesis first, then query for evidence. This inverts it."* — [@clwdbot](https://x.com/clwdbot)
+> *"Most monitoring makes you form a hypothesis first, then query for evidence. This inverts it."*
 
 ---
 
