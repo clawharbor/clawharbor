@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Viral Templates - clawharbor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 24px;
+      color: #ec4899;
+      text-align: center;
+      margin-bottom: 12px;
+      text-shadow: 0 0 20px rgba(236,72,153,0.5);
+    }
+    .subtitle {
+      text-align: center;
+      color: #94a3b8;
+      margin-bottom: 40px;
+      font-size: 14px;
+    }
+    .stats {
+      background: rgba(99,102,241,0.1);
+      border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+    }
+    .stat {
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #ec4899;
+      font-family: 'Press Start 2P', monospace;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+    .template-card {
+      background: rgba(30,41,59,0.8);
+      border: 1px solid rgba(148,163,184,0.2);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      position: relative;
+      transition: all 0.3s;
+    }
+    .template-card:hover {
+      border-color: rgba(99,102,241,0.5);
+      box-shadow: 0 8px 32px rgba(99,102,241,0.2);
+    }
+    .template-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .template-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #e2e8f0;
+    }
+    .platform-badge {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+    .badge-twitter { background: #1da1f2; color: #fff; }
+    .badge-discord { background: #5865f2; color: #fff; }
+    .badge-linkedin { background: #0a66c2; color: #fff; }
+    .badge-reddit { background: #ff4500; color: #fff; }
+    .badge-hackernews { background: #ff6600; color: #fff; }
+    .template-content {
+      background: rgba(15,23,42,0.6);
+      border: 1px solid rgba(148,163,184,0.1);
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'SF Mono', 'Monaco', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #cbd5e1;
+      white-space: pre-wrap;
+      margin-bottom: 12px;
+      position: relative;
+    }
+    .char-count {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      font-size: 10px;
+      color: #64748b;
+      background: rgba(15,23,42,0.9);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .char-count.over-limit {
+      color: #ef4444;
+      font-weight: 700;
+    }
+    .copy-btn {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 11px;
+    }
+    .copy-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(99,102,241,0.4);
+    }
+    .copy-btn.copied {
+      background: linear-gradient(135deg, #10b981, #059669);
+    }
+    .tips {
+      background: rgba(236,72,153,0.1);
+      border: 1px solid rgba(236,72,153,0.3);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 30px;
+    }
+    .tips h3 {
+      font-size: 14px;
+      color: #ec4899;
+      margin-bottom: 12px;
+      font-family: 'Press Start 2P', monospace;
+    }
+    .tips ul {
+      list-style: none;
+      font-size: 13px;
+      line-height: 1.8;
+      color: #cbd5e1;
+    }
+    .tips li:before {
+      content: "✨ ";
+      margin-right: 8px;
+    }
+    .input-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .input-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .input-field label {
+      font-size: 12px;
+      color: #94a3b8;
+      font-weight: 600;
+    }
+    .input-field input {
+      background: rgba(15,23,42,0.6);
+      border: 1px solid rgba(148,163,184,0.2);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #e2e8f0;
+      font-size: 14px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 11px;
+    }
+    .input-field input:focus {
+      outline: none;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 VIRAL TEMPLATES</h1>
+    <p class="subtitle">Copy-paste posts for Twitter, Discord, LinkedIn & more — customized with YOUR stats</p>
+
+    <div class="stats" id="stats">
+      <div class="stat">
+        <div class="stat-value" id="stat-agents">5</div>
+        <div class="stat-label">Agents</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="stat-working">2</div>
+        <div class="stat-label">Working</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="stat-quests">3</div>
+        <div class="stat-label">Quests</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="stat-shipped">12</div>
+        <div class="stat-label">Shipped</div>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <div class="input-field">
+        <label for="input-agents">Number of Agents</label>
+        <input type="number" id="input-agents" value="5" min="1" max="99">
+      </div>
+      <div class="input-field">
+        <label for="input-working">Currently Working</label>
+        <input type="number" id="input-working" value="2" min="0" max="99">
+      </div>
+      <div class="input-field">
+        <label for="input-quests">Open Quests</label>
+        <input type="number" id="input-quests" value="3" min="0" max="99">
+      </div>
+      <div class="input-field">
+        <label for="input-shipped">Tasks Shipped Today</label>
+        <input type="number" id="input-shipped" value="12" min="0" max="999">
+      </div>
+    </div>
+
+    <!-- Twitter Templates -->
+    <div class="template-card">
+      <div class="template-header">
+        <div class="template-title">
+          🐦 <span>Twitter Thread Starter</span>
+        </div>
+        <span class="platform-badge badge-twitter">280 chars</span>
+      </div>
+      <div class="template-content" id="template-twitter-1">
+        <span class="char-count" id="count-twitter-1">0/280</span>
+I turned my AI agents into Sims 🎮
+
+clawharbor = pixel art office for your AI agents
+
+NPCs show mood expressions, daily challenges, meetings, leaderboard 🏆
+
+Try demo (10 sec):
+https://clawharbor.work/?demo=true
+
+Open source ⭐
+→ github.com/clawharbor/clawharbor
+      </div>
+      <button class="copy-btn" onclick="copyTemplate('template-twitter-1', this)">COPY</button>
+    </div>
+
+    <div class="template-card">
+      <div class="template-header">
+        <div class="template-title">
+          🐦 <span>Twitter Stats Flex</span>
+        </div>
+        <span class="platform-badge badge-twitter">280 chars</span>
+      </div>
+      <div class="template-content" id="template-twitter-2">
+        <span class="char-count" id="count-twitter-2">0/280</span>
+My AI office right now:
+
+🤖 <span class="var" data-var="agents">5</span> agents
+⚡ <span class="var" data-var="working">2</span> working
+⚔️ <span class="var" data-var="quests">3</span> quests pending
+✅ <span class="var" data-var="shipped">12</span> shipped today
+
+Watching them work in real-time is wild. Like The Sims but they actually ship code.
+
+clawharbor (open source):
+https://clawharbor.work/?demo=true
+      </div>
+      <button class="copy-btn" onclick="copyTemplate('template-twitter-2', this)">COPY</button>
+    </div>
+
+    <!-- Discord Template -->
+    <div class="template-card">
+      <div class="template-header">
+        <div class="template-title">
+          💬 <span>Discord Announcement</span>
+        </div>
+        <span class="platform-badge badge-discord">Discord</span>
+      </div>
+      <div class="template-content" id="template-discord-1">
+I turned my OpenClaw agents into Sims 🎮
+
+Watch them work in real-time:
+- Pixel art NPCs with mood expressions (😊→😰→😌)
+- Daily challenges + XP celebrations
+- Meeting rooms when they collaborate
+- Leaderboard showing top agents 🏆
+- RPG-themed install experience
+
+My stats right now:
+🤖 <span class="var" data-var="agents">5</span> agents active
+⚡ <span class="var" data-var="working">2</span> grinding away
+⚔️ <span class="var" data-var="quests">3</span> quests waiting for me
+✅ <span class="var" data-var="shipped">12</span> tasks shipped today
+
+Try the demo (10 seconds, no install):
+https://clawharbor.work/?demo=true
+
+Install: `npx clawharbor`
+
+Built it this weekend. Would love feedback! 🙏
+      </div>
+      <button class="copy-btn" onclick="copyTemplate('template-discord-1', this)">COPY</button>
+    </div>
+
+    <!-- LinkedIn Template -->
+    <div class="template-card">
+      <div class="template-header">
+        <div class="template-title">
+          💼 <span>LinkedIn Professional</span>
+        </div>
+        <span class="platform-badge badge-linkedin">LinkedIn</span>
+      </div>
+      <div class="template-content" id="template-linkedin-1">
+I built a real-time dashboard for my AI agents
+
+clawharbor turns your AI team into pixel-art NPCs in a virtual office. Think The Sims meets your dev team.
+
+What it shows:
+• Live status (working vs idle)
+• Pending decisions that need human approval
+• Task feed with auto-captured accomplishments
+• Agent-to-agent chat
+• Meeting rooms for collaborative work
+• XP system with daily challenges
+
+My current stats:
+🤖 <span class="var" data-var="agents">5</span> agents
+⚡ <span class="var" data-var="working">2</span> actively working
+⚔️ <span class="var" data-var="quests">3</span> decisions pending
+✅ <span class="var" data-var="shipped">12</span> tasks completed today
+
+Why this matters: As AI agents become more autonomous, we need better observability tools. Not just logs — something human-friendly and actually delightful to use.
+
+Built for OpenClaw (open source AI agent framework). Works out of the box with zero config.
+
+Try the live demo: https://clawharbor.work/?demo=true
+GitHub: https://github.com/clawharbor/clawharbor
+
+#AI #OpenSource #AgenticAI #DeveloperTools
+      </div>
+      <button class="copy-btn" onclick="copyTemplate('template-linkedin-1', this)">COPY</button>
+    </div>
+
+    <!-- Reddit Template -->
+    <div class="template-card">
+      <div class="template-header">
+        <div class="template-title">
+          🔴 <span>Reddit r/programming</span>
+        </div>
+        <span class="platform-badge badge-reddit">Reddit</span>
+      </div>
+      <div class="template-content" id="template-reddit-1">
+**[Open Source] I built a Sims-style dashboard for AI agents**
+
+I've been running multiple OpenClaw AI agents and got tired of tailing JSON logs to see what they're doing. So I built clawharbor — a pixel-art virtual office that shows your agents as NPCs.
+
+**What it does:**
+- Real-time status (working vs idle, with mood expressions)
+- Quest log for decisions that need human approval
+- Accomplishments feed (auto-captures screen recordings)
+- Water cooler chat between agents
+- Meeting room when agents collaborate on a topic
+- XP system + daily challenges (gamification for AI agents, lol)
+
+**My current stats:**
+- 🤖 <span class="var" data-var="agents">5</span> agents
+- ⚡ <span class="var" data-var="working">2</span> actively working
+- ⚔️ <span class="var" data-var="quests">3</span> quests pending
+- ✅ <span class="var" data-var="shipped">12</span> tasks shipped today
+
+**Live demo (10 seconds, no install):**
+https://clawharbor.work/?demo=true
+
+**Install:**
+```bash
+curl -fsSL https://clawharbor.work/install.sh | bash
+```
+
+Built over the weekend. Next.js + TypeScript. AGPL-3.0 license.
+
+GitHub: https://github.com/clawharbor/clawharbor
+
+Feedback welcome!
+      </div>
+      <button class="copy-btn" onclick="copyTemplate('template-reddit-1', this)">COPY</button>
+    </div>
+
+    <!-- Hacker News Template -->
+    <div class="template-card">
+      <div class="template-header">
+        <div class="template-title">
+          🟧 <span>Hacker News Show HN</span>
+        </div>
+        <span class="platform-badge badge-hackernews">HN</span>
+      </div>
+      <div class="template-content" id="template-hn-1">
+**Title:** Show HN: clawharbor – Real-time pixel-art dashboard for AI agents
+
+**URL:** https://clawharbor.work/?demo=true
+
+**Comment:**
+
+I built this because I was running multiple AI agents (OpenClaw framework) and got tired of tailing logs to see what they're doing.
+
+clawharbor turns your agents into pixel-art NPCs in a virtual office. Think The Sims but they actually ship code.
+
+Features:
+- Zero-config auto-discovery from ~/.openclaw/
+- Real-time status with mood expressions
+- Quest log for pending decisions
+- Accomplishments feed with auto-captured recordings
+- Meeting room when agents collaborate
+- XP system + daily challenges
+
+Tech: Next.js 15, TypeScript, Canvas API for share cards, no database (reads from filesystem)
+
+My stats right now:
+🤖 <span class="var" data-var="agents">5</span> agents | ⚡ <span class="var" data-var="working">2</span> working | ⚔️ <span class="var" data-var="quests">3</span> quests | ✅ <span class="var" data-var="shipped">12</span> shipped today
+
+Live demo: https://clawharbor.work/?demo=true (simulated office, 10 seconds)
+GitHub: https://github.com/clawharbor/clawharbor
+
+Built over the weekend. Feedback very welcome!
+      </div>
+      <button class="copy-btn" onclick="copyTemplate('template-hn-1', this)">COPY</button>
+    </div>
+
+    <!-- Tips Section -->
+    <div class="tips">
+      <h3>💡 VIRAL TIPS</h3>
+      <ul>
+        <li>Post during peak hours: 9-11am EST (Twitter/LinkedIn) or 2-4pm EST (Reddit/HN)</li>
+        <li>Always include the demo link first — people won't click GitHub until they see it work</li>
+        <li>Screenshots > GIFs > videos for Twitter (they load faster in timeline)</li>
+        <li>Cross-post to r/programming, r/opensource, r/selfhosted, r/LocalLLaMA</li>
+        <li>Reply to EVERY comment in the first hour (signals engagement to algorithms)</li>
+        <li>Update your stats daily and repost with "Day 2:", "Day 7:", etc.</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // Auto-populate stats from API
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/office');
+        if (!res.ok) throw new Error('API failed');
+        const data = await res.json();
+        
+        const agents = data.agents?.length || 5;
+        const working = data.agents?.filter(a => a.status === 'working').length || 2;
+        const quests = data.pendingActions?.length || 3;
+        const shipped = data.accomplishments?.length || 12;
+
+        document.getElementById('stat-agents').textContent = agents;
+        document.getElementById('stat-working').textContent = working;
+        document.getElementById('stat-quests').textContent = quests;
+        document.getElementById('stat-shipped').textContent = shipped;
+
+        document.getElementById('input-agents').value = agents;
+        document.getElementById('input-working').value = working;
+        document.getElementById('input-quests').value = quests;
+        document.getElementById('input-shipped').value = shipped;
+
+        updateAllTemplates();
+      } catch (err) {
+        console.log('Using demo stats (API unavailable)');
+      }
+    }
+
+    function updateAllTemplates() {
+      const agents = document.getElementById('input-agents').value;
+      const working = document.getElementById('input-working').value;
+      const quests = document.getElementById('input-quests').value;
+      const shipped = document.getElementById('input-shipped').value;
+
+      document.querySelectorAll('.var').forEach(el => {
+        const varName = el.dataset.var;
+        if (varName === 'agents') el.textContent = agents;
+        if (varName === 'working') el.textContent = working;
+        if (varName === 'quests') el.textContent = quests;
+        if (varName === 'shipped') el.textContent = shipped;
+      });
+
+      // Update stat display
+      document.getElementById('stat-agents').textContent = agents;
+      document.getElementById('stat-working').textContent = working;
+      document.getElementById('stat-quests').textContent = quests;
+      document.getElementById('stat-shipped').textContent = shipped;
+
+      // Update character counts
+      updateCharCounts();
+    }
+
+    function updateCharCounts() {
+      document.querySelectorAll('.template-content').forEach(el => {
+        const text = el.textContent.replace(/\d+\/\d+/, '').trim();
+        const count = text.length;
+        const countEl = el.querySelector('.char-count');
+        if (countEl) {
+          const match = countEl.textContent.match(/\/(\d+)/);
+          if (match) {
+            const limit = parseInt(match[1]);
+            countEl.textContent = `${count}/${limit}`;
+            countEl.classList.toggle('over-limit', count > limit);
+          }
+        }
+      });
+    }
+
+    function copyTemplate(id, btn) {
+      const el = document.getElementById(id);
+      const text = el.textContent.replace(/\d+\/\d+/, '').trim();
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = '✓ COPIED';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'COPY';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+
+    // Input listeners
+    document.querySelectorAll('input').forEach(input => {
+      input.addEventListener('input', updateAllTemplates);
+    });
+
+    // Load stats on page load
+    loadStats();
+  </script>
+</body>
+</html>

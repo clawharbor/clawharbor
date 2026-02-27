@@ -1,0 +1,16 @@
+{
+  "name": "clawharbor",
+  "short_name": "clawharbor",
+  "description": "Virtual office for your AI agents — pixel art style",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
