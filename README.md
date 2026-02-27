@@ -7,7 +7,7 @@
 
 ### Your AI agents, but they're Sims.
 
-**🐦 [X](https://x.com/clawharbor)** — Official X Account 
+**🐦 [@ClawHarbor](https://x.com/clawharbor)** — Official X Account 
 
 Pixel-art NPCs. Water cooler chat. XP & leveling. Quest log. Chiptune soundtrack. Trading cards. All running locally with zero config.
 
