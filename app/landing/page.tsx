@@ -701,7 +701,7 @@ export default function LandingPage() {
           color: theme.textDim,
           marginBottom: 12,
         }}>
-          Open Source • AGPL-3.0 • Made with 💜 by the OpenClaw community
+          Open Source • AGPL-3.0 • Made with 💜 by Claw Harbor
         </p>
         <p style={{
           fontSize: 10,
@@ -724,8 +724,8 @@ export default function LandingPage() {
           <a href="https://docs.openclaw.ai" style={{ color: theme.accent, textDecoration: 'none' }}>
             Docs
           </a>
-          <a href="https://openclaw.ai/discord" style={{ color: theme.accent, textDecoration: 'none' }}>
-            Discord
+          <a href="https://x.com/clawharbor" style={{ color: theme.accent, textDecoration: 'none' }}>
+            X
           </a>
         </div>
       </div>
