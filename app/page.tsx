@@ -60,15 +60,15 @@ export default function HomePage() {
   const sfx = useRetroSFX();
   const music = useChiptune();
   const authenticatedFetch = useAuthenticatedFetch();
-  const { burnouts, giveBreak } = useBurnout(agents);
-  const { snapshots, isRecording, startRecording, stopRecording, clearRecording } = useOfficeReplay(agents);
-  const { battle, isLoading: battleLoading, hasVoted, vote, dismissBattle, randomBattle } = useBattle(agents);
   
   const secureFetch = useCallback(async (url: string, options: RequestInit = {}) => {
     if (isDemoMode) return fetch(url, options);
     return authenticatedFetch(url, options);
   }, [isDemoMode, authenticatedFetch]);
   const [agents, setAgents] = useState<Agent[]>([]);
+  const { burnouts, giveBreak } = useBurnout(agents);
+  const { snapshots, isRecording, startRecording, stopRecording, clearRecording } = useOfficeReplay(agents);
+  const { battle, isLoading: battleLoading, hasVoted, vote, dismissBattle, randomBattle } = useBattle(agents);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [hour] = useState(() => new Date().getHours());
   const [pendingActions, setPendingActions] = useState<PendingAction[]>([]);
