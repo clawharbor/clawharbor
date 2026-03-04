@@ -60,8 +60,6 @@ export default function HomePage() {
   const sfx = useRetroSFX();
   const music = useChiptune();
   const authenticatedFetch = useAuthenticatedFetch();
-
-  // 🔥 Viral features
   const { burnouts, giveBreak } = useBurnout(agents);
   const { snapshots, isRecording, startRecording, stopRecording, clearRecording } = useOfficeReplay(agents);
   const { battle, isLoading: battleLoading, hasVoted, vote, dismissBattle, randomBattle } = useBattle(agents);
@@ -1989,18 +1987,14 @@ export default function HomePage() {
           {/* ACCOMPLISHMENTS */}
 
           {/* 🔥 BURNOUT ALERTS */}
-          <BurnoutPanel
-            burnouts={burnouts}
-            agents={agents}
-            onGiveBreak={giveBreak}
-            theme={{ text: theme.text, textDim: theme.textDim, border: theme.border }}
-          />
+          <BurnoutPanel burnouts={burnouts} agents={agents} onGiveBreak={giveBreak}
+            theme={{ text: theme.text, textDim: theme.textDim, border: theme.border }} />
 
           {/* ⚔️ BATTLE BUTTON */}
           {agents.length >= 2 && (
-            <BattleButton agents={agents} onStartBattle={randomBattle} theme={{ text: theme.text, border: theme.border }} />
+            <BattleButton agents={agents} onStartBattle={randomBattle}
+              theme={{ text: theme.text, border: theme.border }} />
           )}
-
           <div data-tour="accomplishments" style={{
             background: theme.bgSecondary,
             border: '2px solid #1e293b',
@@ -2247,14 +2241,10 @@ export default function HomePage() {
           maxHeight: isMobile ? '400px' : undefined,
         }}>
           {/* 📼 OFFICE REPLAY */}
-          <OfficeReplayPlayer
-            snapshots={snapshots}
-            isRecording={isRecording}
-            onStart={startRecording}
-            onStop={stopRecording}
-            onClear={clearRecording}
-            theme={{ text: theme.text, textDim: theme.textDim, bgSecondary: theme.bgSecondary, border: theme.border }}
-          />
+          <OfficeReplayPlayer snapshots={snapshots} isRecording={isRecording}
+            onStart={startRecording} onStop={stopRecording} onClear={clearRecording}
+            theme={{ text: theme.text, textDim: theme.textDim, bgSecondary: theme.bgSecondary, border: theme.border }} />
+
           <div data-tour="water-cooler" style={{
             background: theme.bgSecondary,
             border: '2px solid #44320a',
@@ -2954,14 +2944,9 @@ export default function HomePage() {
 
       {/* ⚔️ Agent Battle Modal */}
       {battle && (
-        <BattleModal
-          battle={battle}
-          isLoading={battleLoading}
-          hasVoted={hasVoted}
-          onVote={vote}
-          onDismiss={dismissBattle}
-          theme={{ text: theme.text, textDim: theme.textDim, bgSecondary: theme.bgSecondary, border: theme.border }}
-        />
+        <BattleModal battle={battle} isLoading={battleLoading} hasVoted={hasVoted}
+          onVote={vote} onDismiss={dismissBattle}
+          theme={{ text: theme.text, textDim: theme.textDim, bgSecondary: theme.bgSecondary, border: theme.border }} />
       )}
 
       {/* Command Palette (Ctrl+K / Cmd+K / "/") */}
