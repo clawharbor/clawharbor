@@ -17,3 +17,13 @@ export { OfficeEvents } from './OfficeEvents';
 export type { OfficeEvent } from './OfficeEvents';
 export { CommandPalette } from './CommandPalette';
 export type { CommandAction } from './CommandPalette';
+
+// 🔥 Viral Features
+export { BurnoutOverlay, BurnoutBadge, BurnoutPanel, useBurnout } from './BurnoutSystem';
+export type { AgentBurnout, BurnoutLevel } from './BurnoutSystem';
+
+export { OfficeReplayPlayer, useOfficeReplay } from './OfficeReplay';
+export type { OfficeSnapshot } from './OfficeReplay';
+
+export { BattleModal, BattleButton, useBattle } from './AgentBattle';
+export type { Battle, BattleArgument, BattleRecord } from './AgentBattle';
