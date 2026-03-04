@@ -45,21 +45,21 @@ Rules:
 
 Return ONLY the JSON, nothing else.`;
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://llm.bankr.bot/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'anthropic-version': '2023-06-01',
+        'X-API-Key': process.env.BANKR_API_KEY || '',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'gemini-flash',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }],
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`Anthropic API error: ${response.status}`);
+      throw new Error(`Bankr API error: ${response.status}`);
     }
 
     const data = await response.json();
