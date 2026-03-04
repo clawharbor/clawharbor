@@ -27,6 +27,9 @@ import { AccomplishmentDetailModal } from '../components/AccomplishmentDetailMod
 import { CommandPalette } from '../components/CommandPalette';
 import { AgentCard } from '../components/AgentCard';
 import { ChatBubble } from '../components/ChatBubble';
+import { useBurnout, BurnoutPanel } from '../components/BurnoutSystem';
+import { useOfficeReplay, OfficeReplayPlayer } from '../components/OfficeReplay';
+import { useBattle, BattleModal, BattleButton } from '../components/AgentBattle';
 
 
 function Clock({ color }: { color: string }) {
@@ -57,6 +60,11 @@ export default function HomePage() {
   const sfx = useRetroSFX();
   const music = useChiptune();
   const authenticatedFetch = useAuthenticatedFetch();
+
+  // 🔥 Viral features
+  const { burnouts, giveBreak } = useBurnout(agents);
+  const { snapshots, isRecording, startRecording, stopRecording, clearRecording } = useOfficeReplay(agents);
+  const { battle, isLoading: battleLoading, hasVoted, vote, dismissBattle, randomBattle } = useBattle(agents);
   
   const secureFetch = useCallback(async (url: string, options: RequestInit = {}) => {
     if (isDemoMode) return fetch(url, options);
@@ -1979,6 +1987,20 @@ export default function HomePage() {
 
           {/* ACTIVITY LOG */}
           {/* ACCOMPLISHMENTS */}
+
+          {/* 🔥 BURNOUT ALERTS */}
+          <BurnoutPanel
+            burnouts={burnouts}
+            agents={agents}
+            onGiveBreak={giveBreak}
+            theme={{ text: theme.text, textDim: theme.textDim, border: theme.border }}
+          />
+
+          {/* ⚔️ BATTLE BUTTON */}
+          {agents.length >= 2 && (
+            <BattleButton agents={agents} onStartBattle={randomBattle} theme={{ text: theme.text, border: theme.border }} />
+          )}
+
           <div data-tour="accomplishments" style={{
             background: theme.bgSecondary,
             border: '2px solid #1e293b',
@@ -2224,6 +2246,15 @@ export default function HomePage() {
           overflow: isMobile ? 'visible' : 'hidden',
           maxHeight: isMobile ? '400px' : undefined,
         }}>
+          {/* 📼 OFFICE REPLAY */}
+          <OfficeReplayPlayer
+            snapshots={snapshots}
+            isRecording={isRecording}
+            onStart={startRecording}
+            onStop={stopRecording}
+            onClear={clearRecording}
+            theme={{ text: theme.text, textDim: theme.textDim, bgSecondary: theme.bgSecondary, border: theme.border }}
+          />
           <div data-tour="water-cooler" style={{
             background: theme.bgSecondary,
             border: '2px solid #44320a',
@@ -2918,6 +2949,18 @@ export default function HomePage() {
           agent={agentCardAgent}
           accomplishments={accomplishments}
           onClose={() => setAgentCardAgent(null)}
+        />
+      )}
+
+      {/* ⚔️ Agent Battle Modal */}
+      {battle && (
+        <BattleModal
+          battle={battle}
+          isLoading={battleLoading}
+          hasVoted={hasVoted}
+          onVote={vote}
+          onDismiss={dismissBattle}
+          theme={{ text: theme.text, textDim: theme.textDim, bgSecondary: theme.bgSecondary, border: theme.border }}
         />
       )}
 
