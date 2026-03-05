@@ -68,25 +68,8 @@ export interface PayrollResult {
   token: string;
 }
 
-// ─── Bankr Direct (browser → Bankr API) ──────────────────────────────────────
-
-async function pollBankrJob(jobId: string, apiKey: string): Promise<string> {
-  for (let i = 0; i < 60; i++) {
-    await new Promise(r => setTimeout(r, 2000));
-    const res = await fetch(`${BANKR_API}/job/${jobId}`, {
-      headers: { 'X-API-Key': apiKey },
-    });
-    if (!res.ok) throw new Error(`Bankr poll error: ${res.status}`);
-    const job = await res.json();
-    if (job.status === 'completed') {
-      const text: string = job.response || '';
-      const match = text.match(/0x[a-fA-F0-9]{64}/);
-      return match ? match[0] : '';
-    }
-    if (job.status === 'failed') throw new Error(job.error || 'Bankr job failed');
-  }
-  throw new Error('Bankr job timed out after 2 minutes');
-}
+// ─── Bankr via Server Proxy ───────────────────────────────────────────────────
+// API key sent per-request to our server proxy, never stored server-side
 
 async function payViaBankr(
   apiKey: string,
@@ -99,29 +82,19 @@ async function payViaBankr(
     ? `Send ${amount} ETH to ${toAddress} on Base. Payroll for AI agent ${agentName}.`
     : `Send ${amount} ${token.symbol} (contract: ${token.address}) to ${toAddress} on Base. Payroll for AI agent ${agentName}.`;
 
-  const submitRes = await fetch(`${BANKR_API}/prompt`, {
+  const res = await fetch('/api/payroll/bankr', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-API-Key': apiKey,
-    },
-    body: JSON.stringify({ prompt }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ apiKey, prompt, agentName, amount, token: token.symbol }),
   });
 
-  if (!submitRes.ok) {
-    const err = await submitRes.text();
-    throw new Error(`Bankr error ${submitRes.status}: ${err}`);
-  }
-
-  const { jobId } = await submitRes.json();
-  if (!jobId) throw new Error('No jobId from Bankr');
-
-  const txHash = await pollBankrJob(jobId, apiKey);
+  const data = await res.json();
+  if (!res.ok || data.error) throw new Error(data.error || 'Payment failed');
 
   return {
     success: true,
-    txHash,
-    basescanUrl: txHash ? `https://basescan.org/tx/${txHash}` : undefined,
+    txHash: data.txHash,
+    basescanUrl: data.txHash ? `https://basescan.org/tx/${data.txHash}` : undefined,
     method: 'bankr',
     agent: agentName,
     amount,
