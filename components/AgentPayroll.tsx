@@ -1,17 +1,21 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import type { Agent } from './types';
 
 /**
  * Agent Payroll — Pay your AI agents in crypto on Base
  *
  * Two payment methods:
- * 1. Bankr API — uses your Bankr wallet, no user wallet needed
- * 2. WalletConnect — user signs tx from their own wallet (more "onchain native")
+ * 1. Bankr — user inputs their own Bankr API key, stored in sessionStorage only.
+ *            Request goes DIRECTLY from browser to Bankr API — never through our server.
+ * 2. Wallet — user signs tx from their own wallet (MetaMask / Coinbase Wallet)
  *
- * Supported tokens: USDC, ETH, BNKR, HARBOR (0x4972e029F2E1831D205b20D05833CC771FEB2BA3)
+ * Supported tokens: USDC, ETH, BNKR, HARBOR
  */
+
+const BANKR_API = 'https://api.bankr.bot/agent';
+const SESSION_KEY = 'clawharbor_bankr_key';
 
 // ─── Token Config ─────────────────────────────────────────────────────────────
 
@@ -43,7 +47,7 @@ export const PAYROLL_TOKENS = [
   {
     symbol: 'HARBOR',
     name: 'Harbor Token',
-    icon: 'https://cdn.dexscreener.com/cms/images/VGxBfMsGJrQJEkLg?width=64&height=64&fit=crop&quality=95&format=auto',
+    icon: 'https://assets.coingecko.com/coins/images/37158/small/harbor.png',
     decimals: 18,
     address: '0x4972e029F2E1831D205b20D05833CC771FEB2BA3',
     color: '#22c55e',
@@ -51,8 +55,7 @@ export const PAYROLL_TOKENS = [
 ] as const;
 
 export type PayrollToken = typeof PAYROLL_TOKENS[number];
-
-export type PaymentMethod = 'bankr' | 'walletconnect';
+export type PaymentMethod = 'bankr' | 'wallet';
 
 export interface PayrollResult {
   success: boolean;
@@ -65,32 +68,56 @@ export interface PayrollResult {
   token: string;
 }
 
-// ─── Bankr Payment ────────────────────────────────────────────────────────────
+// ─── Bankr Direct (browser → Bankr API) ──────────────────────────────────────
+
+async function pollBankrJob(jobId: string, apiKey: string): Promise<string> {
+  for (let i = 0; i < 60; i++) {
+    await new Promise(r => setTimeout(r, 2000));
+    const res = await fetch(`${BANKR_API}/job/${jobId}`, {
+      headers: { 'X-API-Key': apiKey },
+    });
+    if (!res.ok) throw new Error(`Bankr poll error: ${res.status}`);
+    const job = await res.json();
+    if (job.status === 'completed') {
+      const text: string = job.response || '';
+      const match = text.match(/0x[a-fA-F0-9]{64}/);
+      return match ? match[0] : '';
+    }
+    if (job.status === 'failed') throw new Error(job.error || 'Bankr job failed');
+  }
+  throw new Error('Bankr job timed out after 2 minutes');
+}
 
 async function payViaBankr(
+  apiKey: string,
   toAddress: string,
   amount: string,
   token: PayrollToken,
   agentName: string
 ): Promise<PayrollResult> {
-  const prompt =
-    token.symbol === 'ETH'
-      ? `Send ${amount} ETH to ${toAddress} on Base. This is payroll for my AI agent ${agentName}.`
-      : `Send ${amount} ${token.symbol} to ${toAddress} on Base. Token address: ${token.address}. This is payroll for my AI agent ${agentName}.`;
+  const prompt = token.symbol === 'ETH'
+    ? `Send ${amount} ETH to ${toAddress} on Base. Payroll for AI agent ${agentName}.`
+    : `Send ${amount} ${token.symbol} (contract: ${token.address}) to ${toAddress} on Base. Payroll for AI agent ${agentName}.`;
 
-  const res = await fetch('/api/payroll/bankr', {
+  const submitRes = await fetch(`${BANKR_API}/prompt`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt, agentName, amount, token: token.symbol, toAddress }),
+    headers: {
+      'Content-Type': 'application/json',
+      'X-API-Key': apiKey,
+    },
+    body: JSON.stringify({ prompt }),
   });
 
-  const data = await res.json();
-
-  if (!res.ok || data.error) {
-    return { success: false, error: data.error || 'Bankr payment failed', method: 'bankr', agent: agentName, amount, token: token.symbol };
+  if (!submitRes.ok) {
+    const err = await submitRes.text();
+    throw new Error(`Bankr error ${submitRes.status}: ${err}`);
   }
 
-  const txHash = data.txHash;
+  const { jobId } = await submitRes.json();
+  if (!jobId) throw new Error('No jobId from Bankr');
+
+  const txHash = await pollBankrJob(jobId, apiKey);
+
   return {
     success: true,
     txHash,
@@ -102,29 +129,25 @@ async function payViaBankr(
   };
 }
 
-// ─── WalletConnect Payment (via window.ethereum) ─────────────────────────────
+// ─── Wallet Direct (window.ethereum) ─────────────────────────────────────────
 
 async function payViaWallet(
   toAddress: string,
   amount: string,
-  token: PayrollToken
+  token: PayrollToken,
+  agentName: string
 ): Promise<PayrollResult> {
   const ethereum = (window as any).ethereum;
   if (!ethereum) throw new Error('No wallet detected. Install MetaMask or Coinbase Wallet.');
 
-  // Request account access
   const accounts: string[] = await ethereum.request({ method: 'eth_requestAccounts' });
   const from = accounts[0];
 
-  // Switch to Base (chainId 8453 = 0x2105)
+  // Switch to Base
   try {
-    await ethereum.request({
-      method: 'wallet_switchEthereumChain',
-      params: [{ chainId: '0x2105' }],
-    });
-  } catch (switchError: any) {
-    // Add Base if not present
-    if (switchError.code === 4902) {
+    await ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x2105' }] });
+  } catch (e: any) {
+    if (e.code === 4902) {
       await ethereum.request({
         method: 'wallet_addEthereumChain',
         params: [{
@@ -135,28 +158,22 @@ async function payViaWallet(
           blockExplorerUrls: ['https://basescan.org'],
         }],
       });
-    } else {
-      throw switchError;
-    }
+    } else throw e;
   }
 
   let txHash: string;
 
   if (token.symbol === 'ETH') {
-    // Native ETH transfer
     const valueHex = '0x' + BigInt(Math.round(parseFloat(amount) * 1e18)).toString(16);
     txHash = await ethereum.request({
       method: 'eth_sendTransaction',
       params: [{ from, to: toAddress, value: valueHex }],
     });
   } else {
-    // ERC-20 transfer
-    const decimals = token.decimals;
-    const amountBigInt = BigInt(Math.round(parseFloat(amount) * Math.pow(10, decimals)));
+    const amountBigInt = BigInt(Math.round(parseFloat(amount) * Math.pow(10, token.decimals)));
     const amountHex = amountBigInt.toString(16).padStart(64, '0');
     const toHex = toAddress.slice(2).padStart(64, '0');
     const data = `0xa9059cbb${toHex}${amountHex}`;
-
     txHash = await ethereum.request({
       method: 'eth_sendTransaction',
       params: [{ from, to: token.address, data }],
@@ -167,8 +184,8 @@ async function payViaWallet(
     success: true,
     txHash,
     basescanUrl: `https://basescan.org/tx/${txHash}`,
-    method: 'walletconnect',
-    agent: '',
+    method: 'wallet',
+    agent: agentName,
     amount,
     token: token.symbol,
   };
@@ -189,31 +206,51 @@ export function PayAgentModal({
   const [toAddress, setToAddress] = useState('');
   const [amount, setAmount] = useState('');
   const [selectedToken, setSelectedToken] = useState<PayrollToken>(PAYROLL_TOKENS[0]);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('walletconnect');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('wallet');
+  const [bankrKey, setBankrKey] = useState('');
+  const [bankrKeyInput, setBankrKeyInput] = useState('');
+  const [showKeyInput, setShowKeyInput] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [result, setResult] = useState<PayrollResult | null>(null);
 
   const textColor = theme.text || '#e2e8f0';
   const dimColor = theme.textDim || '#64748b';
   const borderColor = theme.border || '#1e293b';
-  const bgColor = theme.bgSecondary || '#0f172a';
 
-  const isValid = toAddress.startsWith('0x') && toAddress.length === 42 && parseFloat(amount) > 0;
+  // Load API key from sessionStorage on mount
+  useEffect(() => {
+    const saved = sessionStorage.getItem(SESSION_KEY);
+    if (saved) setBankrKey(saved);
+  }, []);
+
+  const saveBankrKey = useCallback(() => {
+    if (!bankrKeyInput.startsWith('bk_')) return;
+    sessionStorage.setItem(SESSION_KEY, bankrKeyInput);
+    setBankrKey(bankrKeyInput);
+    setShowKeyInput(false);
+  }, [bankrKeyInput]);
+
+  const clearBankrKey = useCallback(() => {
+    sessionStorage.removeItem(SESSION_KEY);
+    setBankrKey('');
+    setBankrKeyInput('');
+  }, []);
+
+  const isAddressValid = toAddress.startsWith('0x') && toAddress.length === 42;
+  const isAmountValid = parseFloat(amount) > 0;
+  const isBankrReady = paymentMethod === 'wallet' || bankrKey.length > 0;
+  const isValid = isAddressValid && isAmountValid && isBankrReady;
 
   const handlePay = useCallback(async () => {
     if (!isValid) return;
     setStatus('loading');
-
     try {
       let res: PayrollResult;
-
       if (paymentMethod === 'bankr') {
-        res = await payViaBankr(toAddress, amount, selectedToken, selectedAgent.name);
+        res = await payViaBankr(bankrKey, toAddress, amount, selectedToken, selectedAgent.name);
       } else {
-        res = await payViaWallet(toAddress, amount, selectedToken);
-        res.agent = selectedAgent.name;
+        res = await payViaWallet(toAddress, amount, selectedToken, selectedAgent.name);
       }
-
       setResult(res);
       setStatus(res.success ? 'success' : 'error');
     } catch (err: any) {
@@ -227,14 +264,22 @@ export function PayAgentModal({
       });
       setStatus('error');
     }
-  }, [isValid, paymentMethod, toAddress, amount, selectedToken, selectedAgent]);
+  }, [isValid, paymentMethod, bankrKey, toAddress, amount, selectedToken, selectedAgent]);
 
   const reset = () => { setStatus('idle'); setResult(null); setAmount(''); setToAddress(''); };
+
+  const label = (text: string) => (
+    <label style={{
+      fontFamily: '"Press Start 2P", monospace',
+      fontSize: 7, color: dimColor,
+      display: 'block', marginBottom: 6,
+    }}>{text}</label>
+  );
 
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 1000,
-      background: 'rgba(0,0,0,0.7)',
+      background: 'rgba(0,0,0,0.75)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: 16,
     }}>
@@ -242,9 +287,10 @@ export function PayAgentModal({
         background: '#0a0e1a',
         border: '2px solid #22c55e',
         borderRadius: 16,
-        width: '100%', maxWidth: 480,
+        width: '100%', maxWidth: 500,
+        maxHeight: '90vh',
+        overflowY: 'auto',
         boxShadow: '0 0 40px rgba(34,197,94,0.15)',
-        overflow: 'hidden',
       }}>
         {/* Header */}
         <div style={{
@@ -252,145 +298,109 @@ export function PayAgentModal({
           borderBottom: '2px solid rgba(34,197,94,0.3)',
           padding: '14px 20px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          position: 'sticky' as const, top: 0, zIndex: 1,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 16 }}>💰</span>
             <span style={{
               fontFamily: '"Press Start 2P", monospace',
               fontSize: 9, color: '#22c55e',
-              textTransform: 'uppercase' as const,
             }}>
               Pay Agent
             </span>
           </div>
           <button onClick={onClose} style={{
-            background: 'none', border: 'none', color: dimColor,
-            cursor: 'pointer', fontSize: 16, padding: '0 4px',
+            background: 'none', border: 'none',
+            color: dimColor, cursor: 'pointer', fontSize: 18,
           }}>✕</button>
         </div>
 
-        <div style={{ padding: '20px' }}>
-          {/* Success state */}
+        <div style={{ padding: 20 }}>
+
+          {/* ── Success ── */}
           {status === 'success' && result && (
-            <div style={{ textAlign: 'center' as const }}>
+            <div style={{ textAlign: 'center' as const, padding: '10px 0' }}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>🎉</div>
               <div style={{
                 fontFamily: '"Press Start 2P", monospace',
                 fontSize: 10, color: '#22c55e', marginBottom: 8,
-              }}>
-                Payment Sent!
-              </div>
-              <div style={{ fontFamily: 'monospace', fontSize: 13, color: textColor, marginBottom: 16 }}>
+              }}>Payment Sent!</div>
+              <div style={{ fontFamily: 'monospace', fontSize: 14, color: textColor, marginBottom: 16 }}>
                 {result.amount} {result.token} → {result.agent}
               </div>
               {result.txHash && (
-                <div style={{ marginBottom: 16 }}>
-                  <div style={{ fontFamily: 'monospace', fontSize: 9, color: dimColor, marginBottom: 6 }}>
-                    TX Hash
-                  </div>
-                  <div style={{
-                    fontFamily: 'monospace', fontSize: 9, color: '#a78bfa',
-                    wordBreak: 'break-all' as const,
-                    background: 'rgba(167,139,250,0.1)',
-                    border: '1px solid rgba(167,139,250,0.3)',
-                    borderRadius: 6, padding: '8px 10px',
-                  }}>
-                    {result.txHash}
-                  </div>
+                <div style={{
+                  fontFamily: 'monospace', fontSize: 9, color: '#a78bfa',
+                  wordBreak: 'break-all' as const,
+                  background: 'rgba(167,139,250,0.1)',
+                  border: '1px solid rgba(167,139,250,0.3)',
+                  borderRadius: 6, padding: '10px 12px', marginBottom: 16,
+                }}>
+                  {result.txHash}
                 </div>
               )}
-              <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' as const }}>
                 {result.basescanUrl && (
-                  <a
-                    href={result.basescanUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <a href={result.basescanUrl} target="_blank" rel="noopener noreferrer"
                     style={{
                       background: 'rgba(34,197,94,0.15)',
-                      border: '1px solid #22c55e',
-                      color: '#22c55e',
+                      border: '1px solid #22c55e', color: '#22c55e',
                       borderRadius: 6, padding: '8px 14px',
-                      fontFamily: '"Press Start 2P", monospace',
-                      fontSize: 7, cursor: 'pointer',
+                      fontFamily: '"Press Start 2P", monospace', fontSize: 7,
                       textDecoration: 'none', display: 'inline-block',
-                    }}
-                  >
+                    }}>
                     🔍 View on Basescan
                   </a>
                 )}
                 <button onClick={reset} style={{
                   background: 'rgba(255,255,255,0.05)',
-                  border: `1px solid ${borderColor}`,
-                  color: dimColor, borderRadius: 6, padding: '8px 14px',
-                  fontFamily: '"Press Start 2P", monospace',
-                  fontSize: 7, cursor: 'pointer',
-                }}>
-                  Pay Again
-                </button>
+                  border: `1px solid ${borderColor}`, color: dimColor,
+                  borderRadius: 6, padding: '8px 14px',
+                  fontFamily: '"Press Start 2P", monospace', fontSize: 7, cursor: 'pointer',
+                }}>Pay Again</button>
               </div>
             </div>
           )}
 
-          {/* Error state */}
+          {/* ── Error ── */}
           {status === 'error' && result && (
-            <div style={{ textAlign: 'center' as const }}>
+            <div style={{ textAlign: 'center' as const, padding: '10px 0' }}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>❌</div>
               <div style={{
                 fontFamily: '"Press Start 2P", monospace',
                 fontSize: 9, color: '#ef4444', marginBottom: 12,
-              }}>
-                Payment Failed
-              </div>
+              }}>Payment Failed</div>
               <div style={{
                 fontFamily: 'monospace', fontSize: 12, color: dimColor,
                 background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
                 borderRadius: 6, padding: '8px 12px', marginBottom: 16,
-              }}>
-                {result.error}
-              </div>
+              }}>{result.error}</div>
               <button onClick={reset} style={{
-                background: 'rgba(239,68,68,0.15)',
-                border: '1px solid #ef4444',
+                background: 'rgba(239,68,68,0.15)', border: '1px solid #ef4444',
                 color: '#ef4444', borderRadius: 6, padding: '8px 14px',
-                fontFamily: '"Press Start 2P", monospace',
-                fontSize: 7, cursor: 'pointer',
-              }}>
-                Try Again
-              </button>
+                fontFamily: '"Press Start 2P", monospace', fontSize: 7, cursor: 'pointer',
+              }}>Try Again</button>
             </div>
           )}
 
-          {/* Form */}
+          {/* ── Form ── */}
           {(status === 'idle' || status === 'loading') && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
               {/* Agent selector */}
               <div>
-                <label style={{
-                  fontFamily: '"Press Start 2P", monospace',
-                  fontSize: 7, color: dimColor,
-                  display: 'block', marginBottom: 6,
-                }}>
-                  Select Agent
-                </label>
+                {label('Select Agent')}
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' as const }}>
                   {agents.map(agent => (
-                    <button
-                      key={agent.id}
-                      onClick={() => setSelectedAgent(agent)}
-                      style={{
-                        background: selectedAgent.id === agent.id
-                          ? `${agent.color}33` : 'rgba(255,255,255,0.05)',
-                        border: `2px solid ${selectedAgent.id === agent.id ? agent.color : borderColor}`,
-                        color: textColor, borderRadius: 8, padding: '6px 10px',
-                        cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
-                        transition: 'all 0.2s',
-                      }}
-                    >
+                    <button key={agent.id} onClick={() => setSelectedAgent(agent)} style={{
+                      background: selectedAgent.id === agent.id ? `${agent.color}33` : 'rgba(255,255,255,0.05)',
+                      border: `2px solid ${selectedAgent.id === agent.id ? agent.color : borderColor}`,
+                      color: textColor, borderRadius: 8, padding: '6px 10px',
+                      cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
+                      transition: 'all 0.2s',
+                    }}>
                       <span style={{ fontSize: 14 }}>{agent.emoji}</span>
-                      <span style={{ fontFamily: '"Press Start 2P", monospace', fontSize: 6 }}>
-                        {agent.name}
-                      </span>
+                      <span style={{ fontFamily: '"Press Start 2P", monospace', fontSize: 6 }}>{agent.name}</span>
                     </button>
                   ))}
                 </div>
@@ -398,13 +408,7 @@ export function PayAgentModal({
 
               {/* Wallet address */}
               <div>
-                <label style={{
-                  fontFamily: '"Press Start 2P", monospace',
-                  fontSize: 7, color: dimColor,
-                  display: 'block', marginBottom: 6,
-                }}>
-                  Wallet Address (0x...)
-                </label>
+                {label('Wallet Address (0x...)')}
                 <input
                   type="text"
                   value={toAddress}
@@ -412,7 +416,7 @@ export function PayAgentModal({
                   placeholder="0x..."
                   style={{
                     width: '100%', background: 'rgba(0,0,0,0.4)',
-                    border: `1px solid ${toAddress && !toAddress.startsWith('0x') ? '#ef4444' : borderColor}`,
+                    border: `1px solid ${toAddress && !isAddressValid ? '#ef4444' : borderColor}`,
                     borderRadius: 6, padding: '10px 12px',
                     color: textColor, fontFamily: 'monospace', fontSize: 12,
                     outline: 'none', boxSizing: 'border-box' as const,
@@ -420,34 +424,22 @@ export function PayAgentModal({
                 />
               </div>
 
-              {/* Token + Amount row */}
+              {/* Token + Amount */}
               <div style={{ display: 'flex', gap: 10 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{
-                    fontFamily: '"Press Start 2P", monospace',
-                    fontSize: 7, color: dimColor,
-                    display: 'block', marginBottom: 6,
-                  }}>
-                    Token
-                  </label>
+                  {label('Token')}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                     {PAYROLL_TOKENS.map(token => (
-                      <button
-                        key={token.symbol}
-                        onClick={() => setSelectedToken(token)}
-                        style={{
-                          background: selectedToken.symbol === token.symbol
-                            ? `${token.color}22` : 'rgba(255,255,255,0.03)',
-                          border: `1px solid ${selectedToken.symbol === token.symbol ? token.color : borderColor}`,
-                          color: selectedToken.symbol === token.symbol ? token.color : dimColor,
-                          borderRadius: 6, padding: '6px 10px',
-                          cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
-                          fontFamily: '"Press Start 2P", monospace', fontSize: 7,
-                          transition: 'all 0.15s',
-                          textAlign: 'left' as const,
-                        }}
-                      >
-                        <img src={token.icon} alt={token.symbol} style={{ width: 16, height: 16, borderRadius: '50%', objectFit: 'cover' }} />
+                      <button key={token.symbol} onClick={() => setSelectedToken(token)} style={{
+                        background: selectedToken.symbol === token.symbol ? `${token.color}22` : 'rgba(255,255,255,0.03)',
+                        border: `1px solid ${selectedToken.symbol === token.symbol ? token.color : borderColor}`,
+                        color: selectedToken.symbol === token.symbol ? token.color : dimColor,
+                        borderRadius: 6, padding: '6px 10px',
+                        cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                        fontFamily: '"Press Start 2P", monospace', fontSize: 7,
+                        transition: 'all 0.15s', textAlign: 'left' as const,
+                      }}>
+                        <img src={token.icon} alt={token.symbol} style={{ width: 16, height: 16, borderRadius: '50%', objectFit: 'cover' as const }} />
                         <span>{token.symbol}</span>
                       </button>
                     ))}
@@ -455,13 +447,7 @@ export function PayAgentModal({
                 </div>
 
                 <div style={{ flex: 1 }}>
-                  <label style={{
-                    fontFamily: '"Press Start 2P", monospace',
-                    fontSize: 7, color: dimColor,
-                    display: 'block', marginBottom: 6,
-                  }}>
-                    Amount
-                  </label>
+                  {label('Amount')}
                   <input
                     type="number"
                     value={amount}
@@ -473,26 +459,18 @@ export function PayAgentModal({
                       width: '100%', background: 'rgba(0,0,0,0.4)',
                       border: `1px solid ${borderColor}`,
                       borderRadius: 6, padding: '10px 12px',
-                      color: textColor, fontFamily: 'monospace', fontSize: 16,
+                      color: textColor, fontFamily: 'monospace', fontSize: 18,
                       outline: 'none', boxSizing: 'border-box' as const,
                     }}
                   />
-                  {/* Quick amounts */}
                   <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' as const }}>
                     {['1', '5', '10', '100'].map(v => (
-                      <button
-                        key={v}
-                        onClick={() => setAmount(v)}
-                        style={{
-                          background: 'rgba(255,255,255,0.05)',
-                          border: `1px solid ${borderColor}`,
-                          color: dimColor, borderRadius: 4,
-                          padding: '2px 6px', cursor: 'pointer',
-                          fontFamily: 'monospace', fontSize: 10,
-                        }}
-                      >
-                        {v}
-                      </button>
+                      <button key={v} onClick={() => setAmount(v)} style={{
+                        background: 'rgba(255,255,255,0.05)',
+                        border: `1px solid ${borderColor}`, color: dimColor,
+                        borderRadius: 4, padding: '2px 8px',
+                        cursor: 'pointer', fontFamily: 'monospace', fontSize: 11,
+                      }}>{v}</button>
                     ))}
                   </div>
                 </div>
@@ -500,50 +478,120 @@ export function PayAgentModal({
 
               {/* Payment method */}
               <div>
-                <label style={{
-                  fontFamily: '"Press Start 2P", monospace',
-                  fontSize: 7, color: dimColor,
-                  display: 'block', marginBottom: 6,
-                }}>
-                  Pay Via
-                </label>
+                {label('Pay Via')}
                 <div style={{ display: 'flex', gap: 8 }}>
-                  {[
-                    { id: 'walletconnect' as PaymentMethod, icon: '🦊', label: 'Your Wallet', sub: 'MetaMask / Coinbase', isEmoji: true },
-                    { id: 'bankr' as PaymentMethod, icon: 'https://bankr.bot/bankr-symbol-full-color-rgb.svg', label: 'Bankr', sub: 'Use Bankr balance', isEmoji: false },
-                  ].map(m => (
-                    <button
-                      key={m.id}
-                      onClick={() => setPaymentMethod(m.id)}
-                      style={{
-                        flex: 1,
-                        background: paymentMethod === m.id
-                          ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.03)',
-                        border: `2px solid ${paymentMethod === m.id ? '#6366f1' : borderColor}`,
-                        color: textColor, borderRadius: 8, padding: '10px 8px',
-                        cursor: 'pointer', transition: 'all 0.2s',
-                      }}
-                    >
-                      <div style={{ fontSize: 20, marginBottom: 4, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {m.isEmoji
-                          ? <span>{m.icon}</span>
-                          : <img src={m.icon} alt="Bankr" style={{ height: 24, width: 'auto' }} />
-                        }
-                      </div>
-                      <div style={{
-                        fontFamily: '"Press Start 2P", monospace',
-                        fontSize: 7, marginBottom: 3,
-                        color: paymentMethod === m.id ? '#818cf8' : textColor,
-                      }}>
-                        {m.label}
-                      </div>
-                      <div style={{ fontFamily: 'monospace', fontSize: 10, color: dimColor }}>
-                        {m.sub}
-                      </div>
-                    </button>
-                  ))}
+                  {/* Wallet option */}
+                  <button onClick={() => setPaymentMethod('wallet')} style={{
+                    flex: 1,
+                    background: paymentMethod === 'wallet' ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.03)',
+                    border: `2px solid ${paymentMethod === 'wallet' ? '#6366f1' : borderColor}`,
+                    color: textColor, borderRadius: 8, padding: '10px 8px',
+                    cursor: 'pointer', transition: 'all 0.2s',
+                  }}>
+                    <div style={{ fontSize: 22, marginBottom: 4 }}>🦊</div>
+                    <div style={{
+                      fontFamily: '"Press Start 2P", monospace', fontSize: 7, marginBottom: 3,
+                      color: paymentMethod === 'wallet' ? '#818cf8' : textColor,
+                    }}>Your Wallet</div>
+                    <div style={{ fontFamily: 'monospace', fontSize: 10, color: dimColor }}>
+                      MetaMask / Coinbase
+                    </div>
+                  </button>
+
+                  {/* Bankr option */}
+                  <button onClick={() => setPaymentMethod('bankr')} style={{
+                    flex: 1,
+                    background: paymentMethod === 'bankr' ? 'rgba(249,115,22,0.15)' : 'rgba(255,255,255,0.03)',
+                    border: `2px solid ${paymentMethod === 'bankr' ? '#F97316' : borderColor}`,
+                    color: textColor, borderRadius: 8, padding: '10px 8px',
+                    cursor: 'pointer', transition: 'all 0.2s',
+                  }}>
+                    <div style={{ height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
+                      <img src="https://bankr.bot/bankr-symbol-full-color-rgb.svg" alt="Bankr" style={{ height: 24, width: 'auto' }} />
+                    </div>
+                    <div style={{
+                      fontFamily: '"Press Start 2P", monospace', fontSize: 7, marginBottom: 3,
+                      color: paymentMethod === 'bankr' ? '#F97316' : textColor,
+                    }}>Bankr</div>
+                    <div style={{ fontFamily: 'monospace', fontSize: 10, color: dimColor }}>
+                      Use Bankr wallet
+                    </div>
+                  </button>
                 </div>
               </div>
+
+              {/* Bankr API key input */}
+              {paymentMethod === 'bankr' && (
+                <div style={{
+                  background: 'rgba(249,115,22,0.08)',
+                  border: '1px solid rgba(249,115,22,0.3)',
+                  borderRadius: 8, padding: '12px 14px',
+                }}>
+                  {bankrKey ? (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ fontFamily: '"Press Start 2P", monospace', fontSize: 6, color: '#22c55e', marginBottom: 3 }}>
+                          ✅ API Key Set
+                        </div>
+                        <div style={{ fontFamily: 'monospace', fontSize: 10, color: dimColor }}>
+                          {bankrKey.slice(0, 8)}•••••••••• (session only)
+                        </div>
+                      </div>
+                      <button onClick={clearBankrKey} style={{
+                        background: 'transparent', border: `1px solid ${borderColor}`,
+                        color: dimColor, borderRadius: 4, padding: '3px 8px',
+                        cursor: 'pointer', fontFamily: 'monospace', fontSize: 10,
+                      }}>Clear</button>
+                    </div>
+                  ) : showKeyInput ? (
+                    <div>
+                      <div style={{ fontFamily: '"Press Start 2P", monospace', fontSize: 6, color: '#F97316', marginBottom: 8 }}>
+                        Enter Bankr API Key
+                      </div>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <input
+                          type="password"
+                          value={bankrKeyInput}
+                          onChange={e => setBankrKeyInput(e.target.value)}
+                          placeholder="bk_..."
+                          onKeyDown={e => e.key === 'Enter' && saveBankrKey()}
+                          style={{
+                            flex: 1, background: 'rgba(0,0,0,0.4)',
+                            border: `1px solid ${bankrKeyInput && !bankrKeyInput.startsWith('bk_') ? '#ef4444' : '#F97316'}`,
+                            borderRadius: 6, padding: '8px 10px',
+                            color: textColor, fontFamily: 'monospace', fontSize: 12,
+                            outline: 'none',
+                          }}
+                        />
+                        <button onClick={saveBankrKey}
+                          disabled={!bankrKeyInput.startsWith('bk_')}
+                          style={{
+                            background: bankrKeyInput.startsWith('bk_') ? 'rgba(249,115,22,0.2)' : 'transparent',
+                            border: `1px solid ${bankrKeyInput.startsWith('bk_') ? '#F97316' : borderColor}`,
+                            color: bankrKeyInput.startsWith('bk_') ? '#F97316' : dimColor,
+                            borderRadius: 6, padding: '8px 12px',
+                            cursor: bankrKeyInput.startsWith('bk_') ? 'pointer' : 'not-allowed',
+                            fontFamily: '"Press Start 2P", monospace', fontSize: 6,
+                          }}>Save</button>
+                      </div>
+                      <div style={{ fontFamily: 'monospace', fontSize: 10, color: dimColor, marginTop: 6 }}>
+                        🔒 Stored in browser session only. Never sent to our server. Get your key at{' '}
+                        <a href="https://bankr.bot/api" target="_blank" rel="noopener noreferrer"
+                          style={{ color: '#F97316' }}>bankr.bot/api</a>
+                      </div>
+                    </div>
+                  ) : (
+                    <button onClick={() => setShowKeyInput(true)} style={{
+                      background: 'transparent', border: `1px solid #F97316`,
+                      color: '#F97316', borderRadius: 6, padding: '8px 14px',
+                      cursor: 'pointer', fontFamily: '"Press Start 2P", monospace', fontSize: 7,
+                      width: '100%',
+                    }}>
+                      🔑 Enter API Key
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* Summary */}
               {isValid && (
@@ -553,10 +601,14 @@ export function PayAgentModal({
                   borderRadius: 8, padding: '10px 14px',
                   fontFamily: 'monospace', fontSize: 12, color: textColor,
                 }}>
-                  Send <span style={{ color: '#22c55e', fontWeight: 700 }}>{amount} {selectedToken.icon} {selectedToken.symbol}</span> to <span style={{ color: '#a78bfa' }}>{selectedAgent.emoji} {selectedAgent.name}</span>
-                  <span style={{ color: dimColor }}> via {paymentMethod === 'bankr'
-                    ? <><img src="https://bankr.bot/bankr-symbol-full-color-rgb.svg" alt="Bankr" style={{ height: 12, width: 'auto', verticalAlign: 'middle', marginRight: 3 }} />Bankr</>
-                    : '🦊 Wallet'}</span>
+                  Send{' '}
+                  <span style={{ color: '#22c55e', fontWeight: 700 }}>{amount} {selectedToken.symbol}</span>
+                  {' '}to{' '}
+                  <span style={{ color: '#a78bfa' }}>{selectedAgent.emoji} {selectedAgent.name}</span>
+                  {' '}via{' '}
+                  <span style={{ color: dimColor }}>
+                    {paymentMethod === 'bankr' ? 'Bankr' : '🦊 Wallet'}
+                  </span>
                 </div>
               )}
 
@@ -568,23 +620,16 @@ export function PayAgentModal({
                   background: isValid ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.05)',
                   border: `2px solid ${isValid ? '#22c55e' : borderColor}`,
                   color: isValid ? '#22c55e' : dimColor,
-                  borderRadius: 8, padding: '12px',
+                  borderRadius: 8, padding: '14px',
                   fontFamily: '"Press Start 2P", monospace',
                   fontSize: 9, cursor: isValid ? 'pointer' : 'not-allowed',
                   width: '100%', transition: 'all 0.2s',
                   opacity: status === 'loading' ? 0.7 : 1,
                 }}
               >
-                {status === 'loading'
-                  ? '⏳ Sending...'
-                  : `💸 Pay ${selectedAgent.name}`}
+                {status === 'loading' ? '⏳ Sending...' : `💸 Pay ${selectedAgent.name}`}
               </button>
 
-              {paymentMethod === 'bankr' && (
-                <div style={{ fontFamily: 'monospace', fontSize: 10, color: dimColor, textAlign: 'center' as const }}>
-                  Requires BANKR_API_KEY with read-write access
-                </div>
-              )}
             </div>
           )}
         </div>
@@ -593,7 +638,7 @@ export function PayAgentModal({
   );
 }
 
-// ─── Pay Button (trigger) ─────────────────────────────────────────────────────
+// ─── Pay Agent Button ─────────────────────────────────────────────────────────
 
 export function PayAgentButton({
   agents,
@@ -603,7 +648,6 @@ export function PayAgentButton({
   theme?: { text?: string; border?: string };
 }) {
   const [open, setOpen] = useState(false);
-
   if (agents.length === 0) return null;
 
   return (
@@ -613,11 +657,9 @@ export function PayAgentButton({
         style={{
           background: 'rgba(34,197,94,0.15)',
           border: '2px solid rgba(34,197,94,0.5)',
-          color: '#86efac',
-          borderRadius: 8, padding: '6px 12px',
+          color: '#86efac', borderRadius: 8, padding: '6px 12px',
           cursor: 'pointer',
-          fontFamily: '"Press Start 2P", monospace',
-          fontSize: 7,
+          fontFamily: '"Press Start 2P", monospace', fontSize: 7,
           display: 'flex', alignItems: 'center', gap: 6,
           transition: 'all 0.2s',
         }}
