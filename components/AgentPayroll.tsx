@@ -43,7 +43,7 @@ export const PAYROLL_TOKENS = [
   {
     symbol: 'HARBOR',
     name: 'Harbor Token',
-    icon: 'https://assets.coingecko.com/coins/images/37158/small/harbor.png',
+    icon: 'https://cdn.dexscreener.com/cms/images/VGxBfMsGJrQJEkLg?width=64&height=64&fit=crop&quality=95&format=auto',
     decimals: 18,
     address: '0x4972e029F2E1831D205b20D05833CC771FEB2BA3',
     color: '#22c55e',
