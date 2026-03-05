@@ -19,15 +19,15 @@ export const PAYROLL_TOKENS = [
   {
     symbol: 'USDC',
     name: 'USD Coin',
-    icon: '💵',
+    icon: 'https://assets.coingecko.com/coins/images/6319/small/usdc.png',
     decimals: 6,
-    address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
+    address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
     color: '#2775CA',
   },
   {
     symbol: 'ETH',
     name: 'Ethereum',
-    icon: '⟠',
+    icon: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
     decimals: 18,
     address: 'native',
     color: '#627EEA',
@@ -35,15 +35,15 @@ export const PAYROLL_TOKENS = [
   {
     symbol: 'BNKR',
     name: 'Bankr Token',
-    icon: '🏦',
+    icon: 'https://bankr.bot/bankr-symbol-full-color-rgb.svg',
     decimals: 18,
-    address: '0x22aF33FE49fD1Fa80c7149773dDe5890D3c76F3b', // BNKR on Base
+    address: '0x22aF33FE49fD1Fa80c7149773dDe5890D3c76F3b',
     color: '#F97316',
   },
   {
     symbol: 'HARBOR',
     name: 'Harbor Token',
-    icon: '⚓',
+    icon: 'https://assets.coingecko.com/coins/images/37158/small/harbor.png',
     decimals: 18,
     address: '0x4972e029F2E1831D205b20D05833CC771FEB2BA3',
     color: '#22c55e',
@@ -447,7 +447,7 @@ export function PayAgentModal({
                           textAlign: 'left' as const,
                         }}
                       >
-                        <span>{token.icon}</span>
+                        <img src={token.icon} alt={token.symbol} style={{ width: 16, height: 16, borderRadius: '50%', objectFit: 'cover' }} />
                         <span>{token.symbol}</span>
                       </button>
                     ))}
