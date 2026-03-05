@@ -509,8 +509,8 @@ export function PayAgentModal({
                 </label>
                 <div style={{ display: 'flex', gap: 8 }}>
                   {[
-                    { id: 'walletconnect' as PaymentMethod, icon: '🦊', label: 'Your Wallet', sub: 'MetaMask / Coinbase' },
-                    { id: 'bankr' as PaymentMethod, icon: '🏦', label: 'Bankr', sub: 'Use Bankr balance' },
+                    { id: 'walletconnect' as PaymentMethod, icon: '🦊', label: 'Your Wallet', sub: 'MetaMask / Coinbase', isEmoji: true },
+                    { id: 'bankr' as PaymentMethod, icon: 'https://bankr.bot/bankr-symbol-full-color-rgb.svg', label: 'Bankr', sub: 'Use Bankr balance', isEmoji: false },
                   ].map(m => (
                     <button
                       key={m.id}
@@ -524,7 +524,12 @@ export function PayAgentModal({
                         cursor: 'pointer', transition: 'all 0.2s',
                       }}
                     >
-                      <div style={{ fontSize: 20, marginBottom: 4 }}>{m.icon}</div>
+                      <div style={{ fontSize: 20, marginBottom: 4, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {m.isEmoji
+                          ? <span>{m.icon}</span>
+                          : <img src={m.icon} alt="Bankr" style={{ height: 24, width: 'auto' }} />
+                        }
+                      </div>
                       <div style={{
                         fontFamily: '"Press Start 2P", monospace',
                         fontSize: 7, marginBottom: 3,
@@ -549,7 +554,9 @@ export function PayAgentModal({
                   fontFamily: 'monospace', fontSize: 12, color: textColor,
                 }}>
                   Send <span style={{ color: '#22c55e', fontWeight: 700 }}>{amount} {selectedToken.icon} {selectedToken.symbol}</span> to <span style={{ color: '#a78bfa' }}>{selectedAgent.emoji} {selectedAgent.name}</span>
-                  <span style={{ color: dimColor }}> via {paymentMethod === 'bankr' ? '🏦 Bankr' : '🦊 Wallet'}</span>
+                  <span style={{ color: dimColor }}> via {paymentMethod === 'bankr'
+                    ? <><img src="https://bankr.bot/bankr-symbol-full-color-rgb.svg" alt="Bankr" style={{ height: 12, width: 'auto', verticalAlign: 'middle', marginRight: 3 }} />Bankr</>
+                    : '🦊 Wallet'}</span>
                 </div>
               )}
 
