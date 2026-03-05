@@ -27,3 +27,7 @@ export type { OfficeSnapshot } from './OfficeReplay';
 
 export { BattleModal, BattleButton, useBattle } from './AgentBattle';
 export type { Battle, BattleArgument, BattleRecord } from './AgentBattle';
+
+// 💰 Agent Payroll
+export { PayAgentButton, PayAgentModal, PAYROLL_TOKENS } from './AgentPayroll';
+export type { PayrollToken, PaymentMethod, PayrollResult } from './AgentPayroll';
