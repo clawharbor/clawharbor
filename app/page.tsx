@@ -30,6 +30,7 @@ import { ChatBubble } from '../components/ChatBubble';
 import { useBurnout, BurnoutPanel } from '../components/BurnoutSystem';
 import { useOfficeReplay, OfficeReplayPlayer } from '../components/OfficeReplay';
 import { useBattle, BattleModal, BattleButton } from '../components/AgentBattle';
+import { PayAgentButton } from '../components/AgentPayroll';
 
 
 function Clock({ color }: { color: string }) {
@@ -1993,6 +1994,12 @@ export default function HomePage() {
           {/* ⚔️ BATTLE BUTTON */}
           {agents.length >= 2 && (
             <BattleButton agents={agents} onStartBattle={randomBattle}
+              theme={{ text: theme.text, border: theme.border }} />
+          )}
+
+          {/* 💰 PAY AGENT */}
+          {agents.length >= 1 && (
+            <PayAgentButton agents={agents}
               theme={{ text: theme.text, border: theme.border }} />
           )}
           <div data-tour="accomplishments" style={{
