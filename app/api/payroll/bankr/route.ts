@@ -2,55 +2,49 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
 /**
- * Payroll via Bankr Agent API
+ * Bankr Payroll Proxy
  *
  * POST /api/payroll/bankr
- * Body: { prompt, agentName, amount, token, toAddress }
+ * Body: { apiKey, prompt, agentName, amount, token }
  *
- * Uses Bankr's natural language prompt API to execute a transfer.
- * Bankr handles wallet, gas, and transaction signing.
+ * Forwards to Bankr using apiKey from request body.
+ * apiKey is NEVER stored — used only for this request then discarded.
  */
 
-const BANKR_API_URL = 'https://api.bankr.bot/agent';
+const BANKR_API = 'https://api.bankr.bot/agent';
 
 async function pollJob(jobId: string, apiKey: string): Promise<string> {
   for (let i = 0; i < 60; i++) {
     await new Promise(r => setTimeout(r, 2000));
-    const res = await fetch(`${BANKR_API_URL}/job/${jobId}`, {
+    const res = await fetch(`${BANKR_API}/job/${jobId}`, {
       headers: { 'X-API-Key': apiKey },
     });
     const job = await res.json();
-
     if (job.status === 'completed') {
-      // Extract tx hash from response text
       const text: string = job.response || '';
       const match = text.match(/0x[a-fA-F0-9]{64}/);
       return match ? match[0] : '';
     }
-
-    if (job.status === 'failed') {
-      throw new Error(job.error || 'Bankr job failed');
-    }
+    if (job.status === 'failed') throw new Error(job.error || 'Bankr job failed');
   }
   throw new Error('Bankr job timed out');
 }
 
 export async function POST(request: Request) {
-  const apiKey = process.env.BANKR_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({ error: 'BANKR_API_KEY not configured' }, { status: 500 });
-  }
-
   try {
     const body = await request.json();
-    const { prompt, agentName, amount, token, toAddress } = body;
+    const { apiKey, prompt, agentName, amount, token } = body;
 
-    if (!prompt || !toAddress || !amount || !token) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    if (!apiKey || !prompt) {
+      return NextResponse.json({ error: 'Missing apiKey or prompt' }, { status: 400 });
     }
 
-    // Submit prompt to Bankr
-    const submitRes = await fetch(`${BANKR_API_URL}/prompt`, {
+    if (!apiKey.startsWith('bk_')) {
+      return NextResponse.json({ error: 'Invalid Bankr API key format' }, { status: 400 });
+    }
+
+    // Forward to Bankr — key used here only, never stored
+    const submitRes = await fetch(`${BANKR_API}/prompt`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -61,13 +55,12 @@ export async function POST(request: Request) {
 
     if (!submitRes.ok) {
       const err = await submitRes.text();
-      throw new Error(`Bankr submit error: ${submitRes.status} — ${err}`);
+      throw new Error(`Bankr error ${submitRes.status}: ${err}`);
     }
 
     const { jobId } = await submitRes.json();
-    if (!jobId) throw new Error('No jobId returned from Bankr');
+    if (!jobId) throw new Error('No jobId from Bankr');
 
-    // Poll for result
     const txHash = await pollJob(jobId, apiKey);
 
     return NextResponse.json({
@@ -80,7 +73,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error: any) {
-    console.error('Bankr payroll error:', error);
+    console.error('Payroll error:', error.message);
     return NextResponse.json({ error: error.message || 'Payment failed' }, { status: 500 });
   }
 }
