@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import type { Agent } from './types';
 
 /**
@@ -648,12 +649,13 @@ export function PayAgentButton({
         💰 Pay Agent
       </button>
 
-      {open && (
+      {open && typeof document !== 'undefined' && createPortal(
         <PayAgentModal
           agents={agents}
           onClose={() => setOpen(false)}
           theme={theme}
-        />
+        />,
+        document.body
       )}
     </>
   );
