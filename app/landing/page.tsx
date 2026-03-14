@@ -10,6 +10,7 @@ export default function LandingPage() {
   const [stars, setStars] = useState<number | null>(null);
   const [darkMode, setDarkMode] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [previewVersion, setPreviewVersion] = useState<'v1' | 'classic'>('v1');
 
   useEffect(() => {
     fetch('https://api.github.com/repos/clawharbor/clawharbor')
@@ -261,21 +262,115 @@ export default function LandingPage() {
           </div>
         )}
 
-        {/* Screenshot */}
-        <div style={{
-          maxWidth: 900,
-          margin: '0 auto',
-          border: `3px solid ${theme.cardBorder}`,
-          borderRadius: 16,
-          overflow: 'hidden',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
-        }}>
-          <img
-            src="/clawharbor-demo.gif"
-            alt="clawharbor Dashboard — pixel art agents working in a virtual office"
-            loading="eager"
-            style={{ width: '100%', display: 'block' }}
-          />
+        {/* Screenshot with version toggle */}
+        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+          {/* Toggle switch */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            marginBottom: 16,
+            gap: 0,
+          }}>
+            <button
+              onClick={() => setPreviewVersion('classic')}
+              style={{
+                padding: '8px 20px',
+                fontFamily: '"Press Start 2P", monospace',
+                fontSize: isMobile ? 7 : 9,
+                cursor: 'pointer',
+                border: `2px solid ${previewVersion === 'classic' ? '#6366f1' : theme.cardBorder}`,
+                borderRight: 'none',
+                borderRadius: '8px 0 0 8px',
+                background: previewVersion === 'classic'
+                  ? 'rgba(99,102,241,0.2)'
+                  : theme.cardBg,
+                color: previewVersion === 'classic' ? '#a5b4fc' : theme.textMuted,
+                transition: 'all 0.2s',
+              }}
+            >
+              Classic
+            </button>
+            <button
+              onClick={() => setPreviewVersion('v1')}
+              style={{
+                padding: '8px 20px',
+                fontFamily: '"Press Start 2P", monospace',
+                fontSize: isMobile ? 7 : 9,
+                cursor: 'pointer',
+                border: `2px solid ${previewVersion === 'v1' ? '#8b5cf6' : theme.cardBorder}`,
+                borderRadius: '0 8px 8px 0',
+                background: previewVersion === 'v1'
+                  ? 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(236,72,153,0.2))'
+                  : theme.cardBg,
+                color: previewVersion === 'v1' ? '#c4b5fd' : theme.textMuted,
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              <span style={{
+                fontSize: 8,
+                background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                fontWeight: 700,
+              }}>★</span>
+              v1.0.0 NEW
+            </button>
+          </div>
+
+          {/* Preview frame */}
+          <div style={{
+            border: `3px solid ${previewVersion === 'v1' ? '#8b5cf6' : theme.cardBorder}`,
+            borderRadius: 16,
+            overflow: 'hidden',
+            boxShadow: previewVersion === 'v1'
+              ? '0 20px 60px rgba(139,92,246,0.3)'
+              : '0 20px 60px rgba(0,0,0,0.5)',
+            transition: 'border-color 0.3s, box-shadow 0.3s',
+            position: 'relative',
+          }}>
+            {/* v1.0 badge overlay */}
+            {previewVersion === 'v1' && (
+              <div style={{
+                position: 'absolute',
+                top: 12, right: 12,
+                background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+                borderRadius: 6,
+                padding: '4px 10px',
+                fontFamily: '"Press Start 2P", monospace',
+                fontSize: 8,
+                color: '#fff',
+                zIndex: 10,
+                boxShadow: '0 2px 8px rgba(139,92,246,0.5)',
+              }}>
+                v1.0.0
+              </div>
+            )}
+            <img
+              key={previewVersion}
+              src={previewVersion === 'v1' ? '/clawharbor-v1-preview.gif' : '/clawharbor-demo.gif'}
+              alt={previewVersion === 'v1'
+                ? 'clawharbor v1.0.0 — claw-empire style dept rooms with transit animation'
+                : 'clawharbor Classic — pixel art agents in Work Room and Lounge'}
+              loading="eager"
+              style={{ width: '100%', display: 'block', transition: 'opacity 0.2s' }}
+            />
+          </div>
+
+          {/* Caption */}
+          <div style={{
+            textAlign: 'center',
+            marginTop: 10,
+            fontSize: 11,
+            color: theme.textDim,
+            fontFamily: '"Press Start 2P", monospace',
+          }}>
+            {previewVersion === 'v1'
+              ? '🏢 Dept rooms + transit animation + Break Room'
+              : '💻 Work Room + Lounge + Quest Log'}
+          </div>
         </div>
       </div>
 
