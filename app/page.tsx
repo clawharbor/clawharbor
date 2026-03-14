@@ -1658,258 +1658,7 @@ export default function HomePage() {
             />
           )}
 
-          {/* ACTIVITY LOG */}
-          {}
-          {/* ACCOMPLISHMENTS */}
 
-          {/* 🔥 BURNOUT ALERTS */}
-          <BurnoutPanel burnouts={burnouts} agents={agents} onGiveBreak={giveBreak}
-            theme={{ text: theme.text, textDim: theme.textDim, border: theme.border }} />
-
-          {/* ⚔️ BATTLE BUTTON */}
-          {agents.length >= 2 && (
-            <BattleButton agents={agents} onStartBattle={randomBattle}
-              theme={{ text: theme.text, border: theme.border }} />
-          )}
-
-          {/* 💰 PAY AGENT */}
-          {agents.length >= 1 && (
-            <PayAgentButton agents={agents}
-              theme={{ text: theme.text, border: theme.border }} />
-          )}
-          <div data-tour="accomplishments" style={{
-            background: theme.bgSecondary,
-            border: '2px solid #1e293b',
-            borderRadius: 8,
-            overflow: 'hidden',
-            flex: '1 1 0',
-            minHeight: 0,
-            display: 'flex',
-            flexDirection: 'column',
-          }}>
-            <div style={{
-              background: theme.bgTertiary,
-              padding: '8px 14px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              flexShrink: 0,
-            }}>
-              <span style={{ fontSize: 12 }}>🏆</span>
-              <span style={{
-                fontFamily: '"Press Start 2P", monospace',
-                fontSize: 7,
-                textTransform: 'uppercase',
-              }}>
-                Accomplishments
-              </span>
-              <span style={{
-                fontSize: 8,
-                color: theme.textMuted,
-                marginLeft: 'auto',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-              }}>
-                {accomplishments.length} recent
-                {archiveTotal > 0 && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); if (!showArchive) loadArchive(true); setShowArchive(!showArchive); }}
-                    style={{
-                      background: showArchive ? 'rgba(99,102,241,0.2)' : 'rgba(99,102,241,0.08)',
-                      border: '1px solid rgba(99,102,241,0.2)',
-                      borderRadius: 4,
-                      color: '#818cf8',
-                      fontSize: 7,
-                      padding: '2px 5px',
-                      cursor: 'pointer',
-                      fontFamily: 'inherit',
-                    }}
-                  >
-                    {showArchive ? 'Hide History' : `${archiveTotal} archived`}
-                  </button>
-                )}
-              </span>
-            </div>
-            <div style={{
-              padding: 8,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 4,
-              overflowY: 'auto',
-              flex: 1,
-            }}>
-              {accomplishments.length > 0 ? (
-                Object.entries(groupedAccomplishments).map(([dateLabel, accs]) => (
-                  <div key={dateLabel}>
-                    {/* Date Header */}
-                    <div style={{
-                      fontSize: 8,
-                      fontFamily: '"Press Start 2P", monospace',
-                      color: theme.textDim,
-                      padding: '8px 4px 4px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                    }}>
-                      {dateLabel}
-                    </div>
-                    {/* Accomplishments for this date */}
-                    {accs.map((a, i) => {
-                  const timeAgo = (() => {
-                    const mins = Math.floor((nowMs - a.timestamp) / 60000);
-                    if (mins < 1) return 'just now';
-                    if (mins < 60) return `${mins}m ago`;
-                    const hours = Math.floor(mins / 60);
-                    if (hours < 24) return `${hours}h ago`;
-                    return `${Math.floor(hours / 24)}d ago`;
-                  })();
-                  const hasMedia = a.screenshot && (a.screenshot.endsWith('.mp4') || a.screenshot.endsWith('.webm') || a.screenshot.endsWith('.mov'));
-                  const hasScreenshot = !!a.screenshot;
-                  const isRecording = !hasScreenshot && (nowMs - a.timestamp) < 30000;
-                  return (
-                    <div
-                      key={`${a.id}-${i}`}
-                      onClick={() => { sfx.play('click'); setSelectedAccomplishment(a); }}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        padding: '5px 8px',
-                        background: 'rgba(16,185,129,0.04)',
-                        border: '1px solid rgba(16,185,129,0.1)',
-                        borderRadius: 6,
-                        cursor: 'pointer',
-                        animation: i === 0 ? 'fadeSlideIn 0.5s ease-out' : undefined,
-                      }}
-                    >
-                      <span style={{ fontSize: 16, flexShrink: 0 }}>
-                        {a.icon}
-                      </span>
-                      <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        <span style={{ fontSize: 10, fontWeight: 700, color: theme.text }}>
-                          {a.title}
-                        </span>
-                      </div>
-                      {a.file && (
-                        <span style={{ fontSize: 10, flexShrink: 0 }} title={`File: ${a.file.split('/').pop()}`}>📄</span>
-                      )}
-                      {hasMedia && !a.file && (
-                        <span style={{ fontSize: 10, flexShrink: 0 }} title="Loom recording attached">🎬</span>
-                      )}
-                      {isRecording && (
-                        <span style={{ fontSize: 8, flexShrink: 0, color: '#f87171', animation: 'pulse 1s infinite' }} title="Recording loom...">🔴 REC</span>
-                      )}
-                      <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'flex-end',
-                        gap: 2,
-                        flexShrink: 0,
-                      }}>
-                        <span style={{ fontSize: 8, fontWeight: 600, color: '#6366f1' }}>
-                          {a.who}
-                        </span>
-                        <span style={{ fontSize: 7, color: theme.textMuted }}>{timeAgo}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-                  </div>
-                ))
-              ) : (
-                <div style={{
-                  padding: 16,
-                  textAlign: 'center',
-                }}>
-                  <div style={{
-                    fontSize: 32,
-                    marginBottom: 8,
-                  }}>
-                    🎯
-                  </div>
-                  <div style={{
-                    color: theme.text,
-                    fontSize: 10,
-                    marginBottom: 6,
-                    fontWeight: 600,
-                  }}>
-                    No accomplishments yet
-                  </div>
-                  <div style={{
-                    color: theme.textDim,
-                    fontSize: 9,
-                    lineHeight: 1.6,
-                  }}>
-                    Once your agents complete tasks,
-                    <br />
-                    they'll appear here!
-                    <br />
-                    <br />
-                    <span style={{ fontSize: 8 }}>
-                      Auto-detected from agent activity ✨
-                    </span>
-                  </div>
-                </div>
-              )}
-              {showArchive && (
-                <div style={{ marginTop: 8, borderTop: '1px solid rgba(99,102,241,0.15)', paddingTop: 8 }}>
-                  <div style={{ fontSize: 8, color: '#818cf8', fontWeight: 700, textTransform: 'uppercase' as const, marginBottom: 6, fontFamily: '"Press Start 2P", monospace' }}>
-                    History ({archiveTotal} archived)
-                  </div>
-                  {archivedAccomplishments.map((a, i) => {
-                    const dateStr = new Date(a.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                    return (
-                      <div
-                        key={`arch-${a.id || i}`}
-                        onClick={() => setSelectedAccomplishment(a)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 8,
-                          padding: '4px 8px',
-                          background: 'rgba(99,102,241,0.03)',
-                          border: '1px solid rgba(99,102,241,0.08)',
-                          borderRadius: 6,
-                          cursor: 'pointer',
-                          marginBottom: 3,
-                          opacity: 0.8,
-                        }}
-                      >
-                        <span style={{ fontSize: 14, flexShrink: 0 }}>{a.icon}</span>
-                        <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          <span style={{ fontSize: 9, fontWeight: 600, color: '#cbd5e1' }}>{a.title}</span>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1, flexShrink: 0 }}>
-                          <span style={{ fontSize: 7, fontWeight: 600, color: '#6366f1' }}>{a.who}</span>
-                          <span style={{ fontSize: 7, color: theme.textMuted }}>{dateStr}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {archivedAccomplishments.length < archiveTotal && (
-                    <button
-                      onClick={() => loadArchive()}
-                      disabled={archiveLoading}
-                      style={{
-                        width: '100%',
-                        marginTop: 4,
-                        padding: '5px 0',
-                        background: 'rgba(99,102,241,0.08)',
-                        border: '1px solid rgba(99,102,241,0.15)',
-                        borderRadius: 6,
-                        color: '#818cf8',
-                        fontSize: 8,
-                        cursor: archiveLoading ? 'wait' : 'pointer',
-                        fontFamily: 'inherit',
-                      }}
-                    >
-                      {archiveLoading ? 'Loading...' : `Load more (${archiveTotal - archivedAccomplishments.length} remaining)`}
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
 
         </div>
 
@@ -2133,6 +1882,267 @@ export default function HomePage() {
 
           {/* Leaderboard removed — XP visible in agent panel */}
         </div>
+      </div>
+      )}
+
+      {/* ── FULL WIDTH BOTTOM SECTION ─────────────────────── */}
+      {agents.length > 0 && (
+      <div style={{
+        maxWidth: 1400,
+        margin: '0 auto',
+        padding: '0 12px 24px',
+      }}>
+        {/* 🔥 BURNOUT ALERTS */}
+        <BurnoutPanel burnouts={burnouts} agents={agents} onGiveBreak={giveBreak}
+          theme={{ text: theme.text, textDim: theme.textDim, border: theme.border }} />
+
+        {/* ⚔️ BATTLE BUTTON */}
+        {agents.length >= 2 && (
+          <BattleButton agents={agents} onStartBattle={randomBattle}
+            theme={{ text: theme.text, border: theme.border }} />
+        )}
+
+        {/* 💰 PAY AGENT */}
+        {agents.length >= 1 && (
+          <PayAgentButton agents={agents}
+            theme={{ text: theme.text, border: theme.border }} />
+        )}
+
+        {/* ACCOMPLISHMENTS — full width */}
+        <div data-tour="accomplishments" style={{
+          background: theme.bgSecondary,
+          border: '2px solid #1e293b',
+          borderRadius: 8,
+          overflow: 'hidden',
+          flex: '1 1 0',
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
+        }}>
+          <div style={{
+            background: theme.bgTertiary,
+            padding: '8px 14px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            flexShrink: 0,
+          }}>
+            <span style={{ fontSize: 12 }}>🏆</span>
+            <span style={{
+              fontFamily: '"Press Start 2P", monospace',
+              fontSize: 7,
+              textTransform: 'uppercase',
+            }}>
+              Accomplishments
+            </span>
+            <span style={{
+              fontSize: 8,
+              color: theme.textMuted,
+              marginLeft: 'auto',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+            }}>
+              {accomplishments.length} recent
+              {archiveTotal > 0 && (
+                <button
+                onClick={(e) => { e.stopPropagation(); if (!showArchive) loadArchive(true); setShowArchive(!showArchive); }}
+                style={{
+                  background: showArchive ? 'rgba(99,102,241,0.2)' : 'rgba(99,102,241,0.08)',
+                  border: '1px solid rgba(99,102,241,0.2)',
+                  borderRadius: 4,
+                  color: '#818cf8',
+                  fontSize: 7,
+                  padding: '2px 5px',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+                >
+                {showArchive ? 'Hide History' : `${archiveTotal} archived`}
+                </button>
+              )}
+            </span>
+          </div>
+          <div style={{
+            padding: 8,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
+            overflowY: 'auto',
+            flex: 1,
+          }}>
+            {accomplishments.length > 0 ? (
+              Object.entries(groupedAccomplishments).map(([dateLabel, accs]) => (
+                <div key={dateLabel}>
+                {/* Date Header */}
+                <div style={{
+                  fontSize: 8,
+                  fontFamily: '"Press Start 2P", monospace',
+                  color: theme.textDim,
+                  padding: '8px 4px 4px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}>
+                  {dateLabel}
+                </div>
+                {/* Accomplishments for this date */}
+                {accs.map((a, i) => {
+                const timeAgo = (() => {
+                const mins = Math.floor((nowMs - a.timestamp) / 60000);
+                if (mins < 1) return 'just now';
+                if (mins < 60) return `${mins}m ago`;
+                const hours = Math.floor(mins / 60);
+                if (hours < 24) return `${hours}h ago`;
+                return `${Math.floor(hours / 24)}d ago`;
+                })();
+                const hasMedia = a.screenshot && (a.screenshot.endsWith('.mp4') || a.screenshot.endsWith('.webm') || a.screenshot.endsWith('.mov'));
+                const hasScreenshot = !!a.screenshot;
+                const isRecording = !hasScreenshot && (nowMs - a.timestamp) < 30000;
+                return (
+                <div
+                  key={`${a.id}-${i}`}
+                  onClick={() => { sfx.play('click'); setSelectedAccomplishment(a); }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '5px 8px',
+                    background: 'rgba(16,185,129,0.04)',
+                    border: '1px solid rgba(16,185,129,0.1)',
+                    borderRadius: 6,
+                    cursor: 'pointer',
+                    animation: i === 0 ? 'fadeSlideIn 0.5s ease-out' : undefined,
+                  }}
+                >
+                  <span style={{ fontSize: 16, flexShrink: 0 }}>
+                    {a.icon}
+                  </span>
+                  <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: theme.text }}>
+                      {a.title}
+                    </span>
+                  </div>
+                  {a.file && (
+                    <span style={{ fontSize: 10, flexShrink: 0 }} title={`File: ${a.file.split('/').pop()}`}>📄</span>
+                  )}
+                  {hasMedia && !a.file && (
+                    <span style={{ fontSize: 10, flexShrink: 0 }} title="Loom recording attached">🎬</span>
+                  )}
+                  {isRecording && (
+                    <span style={{ fontSize: 8, flexShrink: 0, color: '#f87171', animation: 'pulse 1s infinite' }} title="Recording loom...">🔴 REC</span>
+                  )}
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-end',
+                    gap: 2,
+                    flexShrink: 0,
+                  }}>
+                    <span style={{ fontSize: 8, fontWeight: 600, color: '#6366f1' }}>
+                      {a.who}
+                    </span>
+                    <span style={{ fontSize: 7, color: theme.textMuted }}>{timeAgo}</span>
+                  </div>
+                </div>
+                );
+              })}
+                </div>
+              ))
+            ) : (
+              <div style={{
+                padding: 16,
+                textAlign: 'center',
+              }}>
+                <div style={{
+                fontSize: 32,
+                marginBottom: 8,
+                }}>
+                🎯
+                </div>
+                <div style={{
+                color: theme.text,
+                fontSize: 10,
+                marginBottom: 6,
+                fontWeight: 600,
+                }}>
+                No accomplishments yet
+                </div>
+                <div style={{
+                color: theme.textDim,
+                fontSize: 9,
+                lineHeight: 1.6,
+                }}>
+                Once your agents complete tasks,
+                <br />
+                they'll appear here!
+                <br />
+                <br />
+                <span style={{ fontSize: 8 }}>
+                  Auto-detected from agent activity ✨
+                </span>
+                </div>
+              </div>
+            )}
+            {showArchive && (
+              <div style={{ marginTop: 8, borderTop: '1px solid rgba(99,102,241,0.15)', paddingTop: 8 }}>
+                <div style={{ fontSize: 8, color: '#818cf8', fontWeight: 700, textTransform: 'uppercase' as const, marginBottom: 6, fontFamily: '"Press Start 2P", monospace' }}>
+                History ({archiveTotal} archived)
+                </div>
+                {archivedAccomplishments.map((a, i) => {
+                const dateStr = new Date(a.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                return (
+                  <div
+                    key={`arch-${a.id || i}`}
+                    onClick={() => setSelectedAccomplishment(a)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '4px 8px',
+                      background: 'rgba(99,102,241,0.03)',
+                      border: '1px solid rgba(99,102,241,0.08)',
+                      borderRadius: 6,
+                      cursor: 'pointer',
+                      marginBottom: 3,
+                      opacity: 0.8,
+                    }}
+                  >
+                    <span style={{ fontSize: 14, flexShrink: 0 }}>{a.icon}</span>
+                    <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <span style={{ fontSize: 9, fontWeight: 600, color: '#cbd5e1' }}>{a.title}</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1, flexShrink: 0 }}>
+                      <span style={{ fontSize: 7, fontWeight: 600, color: '#6366f1' }}>{a.who}</span>
+                      <span style={{ fontSize: 7, color: theme.textMuted }}>{dateStr}</span>
+                    </div>
+                  </div>
+                );
+                })}
+                {archivedAccomplishments.length < archiveTotal && (
+                <button
+                  onClick={() => loadArchive()}
+                  disabled={archiveLoading}
+                  style={{
+                    width: '100%',
+                    marginTop: 4,
+                    padding: '5px 0',
+                    background: 'rgba(99,102,241,0.08)',
+                    border: '1px solid rgba(99,102,241,0.15)',
+                    borderRadius: 6,
+                    color: '#818cf8',
+                    fontSize: 8,
+                    cursor: archiveLoading ? 'wait' : 'pointer',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  {archiveLoading ? 'Loading...' : `Load more (${archiveTotal - archivedAccomplishments.length} remaining)`}
+                </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
       </div>
       )}
 
