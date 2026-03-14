@@ -7,15 +7,13 @@ import { useChiptune } from '../hooks/useChiptune';
 import { useAuthenticatedFetch } from '../hooks/useAuthenticatedFetch';
 import type { Agent, AgentStatus, Mood, PendingAction, Accomplishment, ChatMessage } from '../components/types';
 import { randomColor, generateAgentDefaults, prettifyTask, formatInterval } from '../components/utils';
-import { NPC } from '../components/NPC';
-import { Room } from '../components/Room';
+import { MultiRoomGrid } from '../components/MultiRoomGrid';
 import { AgentPanel } from '../components/AgentPanel';
 import { SettingsPanel } from '../components/SettingsPanel';
 import { CooldownTimer, linkifyFiles, Stat } from '../components/CooldownTimer';
 import { TemplateGallery } from '../components/TemplateGallery';
 import { DemoBanner } from '../components/DemoBanner';
 import { CustomizeDemo } from '../components/CustomizeDemo';
-import { NPCParticles } from '../components/NPCParticles';
 import { ShareCard } from '../components/ShareCard';
 import { Celebration } from '../components/Celebration';
 import { AchievementToastContainer, AchievementToastData } from '../components/AchievementToast';
@@ -26,7 +24,6 @@ import { CallMeetingModal } from '../components/CallMeetingModal';
 import { AccomplishmentDetailModal } from '../components/AccomplishmentDetailModal';
 import { CommandPalette } from '../components/CommandPalette';
 import { AgentCard } from '../components/AgentCard';
-import { ChatBubble } from '../components/ChatBubble';
 import { useBurnout, BurnoutPanel } from '../components/BurnoutSystem';
 import { useOfficeReplay, OfficeReplayPlayer } from '../components/OfficeReplay';
 import { useBattle, BattleModal, BattleButton } from '../components/AgentBattle';
@@ -1618,108 +1615,28 @@ export default function HomePage() {
           minHeight: 0,
           overflow: isMobile ? 'visible' : 'hidden',
         }}>
-          {/* WORK ROOM — hide in single agent mode */}
-          {agents.length > 1 && (
-          <Room
-            title="Work Room"
-            icon="💻"
-            color="#0a1a10"
-            borderColor="#166534"
-            roomType="work"
-            dataTour="work-room"
-            style={{ flex: isSingleWorkRow || isDoubleWorkRow ? '0 0 auto' : '1 1 auto' }}
-          >
-            <div style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 24,
-              justifyContent: 'center',
-              padding: '12px 0 4px',
-              minHeight: isSingleWorkRow ? 92 : isDoubleWorkRow ? 112 : 80,
-            }}>
-              {working.length > 0 ? (
-                working.map((a, idx) => (
-                  <div
-                    key={a.id}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: 4,
-                      animation: `npcEntrance 0.5s ease-out ${idx * 0.1}s both`,
-                    }}
-                  >
-                    {a.task && (
-                      <div style={{ position: 'relative' }}>
-                        <div onClick={(e) => { e.stopPropagation(); setExpandedTask(expandedTask === a.id ? null : a.id); }} style={{
-                          background: 'rgba(16,185,129,0.12)',
-                          border: '1px solid rgba(16,185,129,0.25)',
-                          borderRadius: 4,
-                          padding: '2px 8px',
-                          fontSize: 8,
-                          color: '#6ee7b7',
-                          maxWidth: 160,
-                          textAlign: 'center',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          cursor: 'pointer',
-                          transition: 'background 0.15s',
-                        }}>
-                          {prettifyTask(a.task)}
-                        </div>
-                        {expandedTask === a.id && (
-                          <div onClick={(e) => e.stopPropagation()} style={{
-                            position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
-                            marginTop: 4, zIndex: 100,
-                            background: theme.bgTertiary, border: '1px solid #334155',
-                            borderRadius: 8, padding: '8px 12px', fontSize: 11, color: theme.text,
-                            maxWidth: 320, minWidth: 180, whiteSpace: 'normal', wordBreak: 'break-word',
-                            lineHeight: 1.4, boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
-                            animation: 'fadeSlideIn 0.15s ease-out',
-                          }}>
-                            <div style={{ fontSize: 8, color: theme.textDim, marginBottom: 4, fontFamily: '"Press Start 2P", monospace' }}>{a.name}</div>
-                            {a.task}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    <div style={{ position: 'relative' }}>
-                      <NPC
-                        agent={a}
-                        size={npcSize}
-                        onClick={() => { sfx.play('click'); setSelectedAgent(a); }}
-                        forceThought={activeThought && activeThought.agentId === a.id ? activeThought.text : null}
-                        hasCelebration={celebrations.some(c => c.agentId === a.id)}
-                        partyMode={partyMode}
-                      />
-                      <div style={{ position: 'absolute', inset: -10, pointerEvents: 'none', zIndex: 0 }}>
-                        <NPCParticles
-                          agentStatus={a.status as 'working' | 'idle'}
-                          agentMood={a.mood as any}
-                          agentRole={a.role}
-                          width={Math.round(64 * npcSize) + 20}
-                          height={Math.round(64 * npcSize) + 20}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div style={{
-                  color: theme.textMuted,
-                  fontFamily: '"Press Start 2P", monospace',
-                  fontSize: 7,
-                  padding: 12,
-                }}>
-                  * nobody working *
-                </div>
-              )}
-            </div>
-          </Room>
-          )}
+          {/* 🏢 MULTI-ROOM GRID — claw-empire style department rooms */}
+          <MultiRoomGrid
+            agents={agents}
+            npcSize={npcSize}
+            onClickAgent={(a) => { sfx.play('click'); setSelectedAgent(a); }}
+            forceThoughts={Object.fromEntries(
+              agents
+                .filter(a => activeThought?.agentId === a.id)
+                .map(a => [a.id, activeThought!.text])
+            )}
+            celebrations={celebrations}
+            partyMode={partyMode}
+            chatBubbles={Object.fromEntries(
+              Object.entries(agentChatBubbles).map(([id, b]) => [id, { message: b.message, color: b.color }])
+            )}
+            expandedTask={expandedTask}
+            setExpandedTask={setExpandedTask}
+            theme={theme}
+            isMobile={isMobile}
+          />
 
-          {/* MEETING ROOM — only appears when meeting.active = true, hidden in demo */}
+          {/* MEETING ROOM — only appears when meeting.active = true */}
           {!isDemoMode && (
             <MeetingRoom
               meeting={meeting}
@@ -1740,251 +1657,9 @@ export default function HomePage() {
               onPlaySound={sfx.play}
             />
           )}
-          {/* LOUNGE + QUEST LOG */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: 6,
-            flex: '0 0 auto',
-          }}>
-            <Room title="The Lounge" icon="☕" color="#1a150a" borderColor="#92400e" roomType="lounge">
-              <div style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 16,
-                justifyContent: 'center',
-                padding: '16px 0 4px',
-                minHeight: idle.length > 0 ? 140 : 80,
-              }}>
-                {idle.length > 0 ? (
-                  idle.map((a, idx) => (
-                    <div
-                      key={a.id}
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: 4,
-                        animation: `npcEntrance 0.5s ease-out ${idx * 0.1}s both`,
-                      }}
-                    >
-                      {a.isNew && (
-                        <div style={{
-                          background: 'rgba(34,197,94,0.15)',
-                          border: '1px solid rgba(34,197,94,0.4)',
-                          borderRadius: 6,
-                          padding: '2px 8px',
-                          fontSize: 8,
-                          color: '#4ade80',
-                          fontFamily: '"Press Start 2P", monospace',
-                        }}>🆕 NEW</div>
-                      )}
-                      {a.nextTaskAt && !a.isNew && <CooldownTimer targetMs={a.nextTaskAt} />}
-                      {!a.isNew && !a.nextTaskAt && (
-                        <div style={{
-                          background: 'rgba(146,64,14,0.15)',
-                          border: '1px solid rgba(146,64,14,0.3)',
-                          borderRadius: 4,
-                          padding: '2px 6px',
-                          fontSize: 7,
-                          color: '#d97706',
-                          textAlign: 'center',
-                        }}>
-                          {['☕ On break', '📖 Reading docs', '🎮 Taking 5', '💭 Thinking...', '🧹 Tidying up'][
-                            a.id.split('').reduce((s: number, c: string) => s + c.charCodeAt(0), 0) % 5
-                          ]}
-                        </div>
-                      )}
-                      <div style={{ position: 'relative' }}>
-                        {agentChatBubbles[a.id] && (
-                          <ChatBubble
-                            message={agentChatBubbles[a.id].message}
-                            agentColor={agentChatBubbles[a.id].color}
-                            size={npcSize}
-                          />
-                        )}
-                        <NPC
-                          agent={a}
-                          size={npcSize}
-                          onClick={() => { sfx.play('click'); setSelectedAgent(a); }}
-                          forceThought={activeThought && activeThought.agentId === a.id ? activeThought.text : null}
-                          hasCelebration={celebrations.some(c => c.agentId === a.id)}
-                          partyMode={partyMode}
-                        />
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div style={{
-                    color: theme.textMuted,
-                    fontFamily: '"Press Start 2P", monospace',
-                    fontSize: 7,
-                    padding: '12px 8px',
-                    textAlign: 'center',
-                    lineHeight: 2,
-                  }}>
-                    {agents.length === 1 ? (
-                      <>
-                        👋 Solo mode!
-                        <br />
-                        Add more agents to build a team.
-                      </>
-                    ) : (
-                      <>
-                        <span style={{ fontSize: 16, display: 'block', marginBottom: 4 }}>💼</span>
-                        Everyone is hard at work!
-                        <br />
-                        <span style={{ color: '#334155', fontSize: 6 }}>
-                          Idle agents hang out here
-                        </span>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-            </Room>
-
-            <Room title="Quest Log" icon="⚔️" color="#0a0a1f" borderColor="#4f46e5" dataTour="quest-log">
-              <div style={{
-                padding: '10px 4px 4px',
-                minHeight: 80,
-                maxHeight: 200,
-                overflowY: 'auto',
-              }}>
-                {pendingActions.length > 0 ? (
-                  pendingActions.slice(0, 5).map(action => {
-                    const priorityColors: Record<string, string> = {
-                      high: '#ef4444',
-                      medium: '#f59e0b',
-                      low: '#6366f1',
-                    };
-                    const priorityGlow: Record<string, string> = {
-                      high: 'rgba(239,68,68,0.2)',
-                      medium: 'rgba(245,158,11,0.1)',
-                      low: 'rgba(99,102,241,0.1)',
-                    };
-                    return (
-                      <div
-                        key={action.id}
-                        onClick={() => { sfx.play('open'); setExpandedAction(action.id); }}
-                        style={{
-                          background: priorityGlow[action.priority],
-                          border: `1px solid ${priorityColors[action.priority]}44`,
-                          borderLeft: `3px solid ${priorityColors[action.priority]}`,
-                          borderRadius: 6,
-                          padding: '6px 8px',
-                          marginBottom: 4,
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ fontSize: 14 }}>{action.icon}</span>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{
-                              fontSize: 10,
-                              fontWeight: 700,
-                              color: theme.text,
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            }}>
-                              {action.title}
-                            </div>
-                            <div style={{
-                              fontSize: 8,
-                              color: theme.textDim,
-                              display: 'flex',
-                              gap: 8,
-                              marginTop: 1,
-                            }}>
-                              <span>from {action.from}</span>
-                              <span style={{
-                                color: priorityColors[action.priority],
-                                fontWeight: 600,
-                                textTransform: 'uppercase',
-                                fontFamily: '"Press Start 2P", monospace',
-                                fontSize: 6,
-                              }}>
-                                {action.priority === 'high'
-                                  ? '❗ URGENT'
-                                  : action.priority === 'medium'
-                                  ? '⚡ SOON'
-                                  : '📋 WHEN FREE'}
-                              </span>
-                            </div>
-                          </div>
-                          <span style={{ fontSize: 10, color: theme.textMuted }}>▶</span>
-                        </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div style={{
-                    padding: 12,
-                    textAlign: 'center',
-                  }}>
-                    <div style={{
-                      fontSize: 24,
-                      marginBottom: 8,
-                    }}>
-                      ✨
-                    </div>
-                    <div style={{
-                      color: theme.text,
-                      fontSize: 10,
-                      marginBottom: 6,
-                      fontWeight: 600,
-                    }}>
-                      No pending decisions
-                    </div>
-                    <div style={{
-                      color: theme.textDim,
-                      fontSize: 9,
-                      lineHeight: 1.5,
-                      marginBottom: 12,
-                    }}>
-                      Your agents will create quests when
-                      <br />
-                      they need your input.
-                      <br />
-                      <br />
-                      <span style={{ fontSize: 8, fontStyle: 'italic' }}>
-                        (Pulled from ~/.openclaw/.status/actions.json)
-                      </span>
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowTemplateGallery(true);
-                      }}
-                      style={{
-                        background: '#6366f1',
-                        border: 'none',
-                        color: '#fff',
-                        borderRadius: 6,
-                        padding: '8px 16px',
-                        cursor: 'pointer',
-                        fontSize: 10,
-                        fontWeight: 600,
-                        transition: 'background 0.2s',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#4f46e5';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = '#6366f1';
-                      }}
-                    >
-                      Browse Quest Templates
-                    </button>
-                  </div>
-                )}
-              </div>
-            </Room>
-          </div>
 
           {/* ACTIVITY LOG */}
+          {}
           {/* ACCOMPLISHMENTS */}
 
           {/* 🔥 BURNOUT ALERTS */}
