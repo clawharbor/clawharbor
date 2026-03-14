@@ -647,7 +647,7 @@ function DeptRoom({
   const deptTheme = getDeptTheme(agent.role);
   const isWorking = agent.status === 'working';
   const ref = useRef<HTMLDivElement>(null);
-  const [dims, setDims] = React.useState({ w: 300, h: 220 });
+  const [dims, setDims] = React.useState({ w: 300, h: 260 });
 
   useEffect(() => {
     if (!ref.current) return;
@@ -666,7 +666,7 @@ function DeptRoom({
       onClick={onClick}
       style={{
         position: 'relative',
-        minHeight: 220,
+        minHeight: 260,
         borderRadius: 4,
         overflow: 'hidden',
         cursor: 'pointer',
@@ -717,7 +717,7 @@ function BreakRoom({
 }) {
   const deptTheme = DEPT_THEMES.breakroom;
   const ref = useRef<HTMLDivElement>(null);
-  const [dims, setDims] = React.useState({ w: 900, h: 130 });
+  const [dims, setDims] = React.useState({ w: 900, h: 160 });
 
   useEffect(() => {
     if (!ref.current) return;
@@ -735,7 +735,7 @@ function BreakRoom({
       ref={ref}
       style={{
         position: 'relative',
-        minHeight: agents.length > 0 ? 160 : 100,
+        minHeight: agents.length > 0 ? 200 : 120,
         borderRadius: 4,
         overflow: 'hidden',
         border: `2.5px solid ${deptTheme.wall}`,
@@ -841,7 +841,7 @@ function CeoOffice({ agent, npcSize, onClick, forceThought, hasCelebration, part
 }) {
   const deptTheme = DEPT_THEMES.ceo;
   const ref = useRef<HTMLDivElement>(null);
-  const [dims, setDims] = React.useState({ w: 900, h: 130 });
+  const [dims, setDims] = React.useState({ w: 900, h: 160 });
 
   useEffect(() => {
     if (!ref.current) return;
@@ -860,7 +860,7 @@ function CeoOffice({ agent, npcSize, onClick, forceThought, hasCelebration, part
       onClick={onClick}
       style={{
         position: 'relative',
-        minHeight: 130,
+        minHeight: 160,
         borderRadius: 4,
         overflow: 'hidden',
         cursor: 'pointer',
