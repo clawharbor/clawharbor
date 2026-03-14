@@ -15,7 +15,7 @@
  * - Break Room full-width at bottom
  */
 
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import type { Agent } from './types';
 import { NPC } from './NPC';
 import { NPCParticles } from './NPCParticles';
@@ -138,7 +138,9 @@ function RoomSVG({ width, height, theme, isCeo }: RoomSVGProps) {
 
   return (
     <svg
-      width={width} height={height}
+      width="100%" height="100%"
+      viewBox={`0 0 ${width} ${height}`}
+      preserveAspectRatio="xMidYMid slice"
       style={{ position: 'absolute', inset: 0, display: 'block' }}
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -646,23 +648,8 @@ function DeptRoom({
 }: DeptRoomProps) {
   const deptTheme = getDeptTheme(agent.role);
   const isWorking = agent.status === 'working';
-  const ref = useRef<HTMLDivElement>(null);
-  const [dims, setDims] = React.useState({ w: 300, h: 260 });
-
-  useEffect(() => {
-    if (!ref.current) return;
-    const ro = new ResizeObserver(entries => {
-      for (const e of entries) {
-        setDims({ w: Math.round(e.contentRect.width), h: Math.round(e.contentRect.height) });
-      }
-    });
-    ro.observe(ref.current);
-    return () => ro.disconnect();
-  }, []);
-
   return (
     <div
-      ref={ref}
       onClick={onClick}
       style={{
         position: 'relative',
@@ -681,7 +668,7 @@ function DeptRoom({
       onMouseLeave={e => { e.currentTarget.style.boxShadow = isWorking ? `0 0 14px ${deptTheme.accent}33` : '0 2px 8px rgba(0,0,0,0.12)'; e.currentTarget.style.borderColor = deptTheme.wall; }}
     >
       {/* SVG room background */}
-      <RoomSVG width={dims.w} height={dims.h} theme={deptTheme} />
+      <RoomSVG width={300} height={260} theme={deptTheme} />
 
       {/* Room sign */}
       <RoomSign theme={deptTheme} />
@@ -716,23 +703,8 @@ function BreakRoom({
   theme: any;
 }) {
   const deptTheme = DEPT_THEMES.breakroom;
-  const ref = useRef<HTMLDivElement>(null);
-  const [dims, setDims] = React.useState({ w: 900, h: 160 });
-
-  useEffect(() => {
-    if (!ref.current) return;
-    const ro = new ResizeObserver(entries => {
-      for (const e of entries) {
-        setDims({ w: Math.round(e.contentRect.width), h: Math.round(e.contentRect.height) });
-      }
-    });
-    ro.observe(ref.current);
-    return () => ro.disconnect();
-  }, []);
-
   return (
     <div
-      ref={ref}
       style={{
         position: 'relative',
         minHeight: agents.length > 0 ? 200 : 120,
@@ -743,7 +715,7 @@ function BreakRoom({
         padding: '36px 24px 16px',
       }}
     >
-      <RoomSVG width={dims.w} height={dims.h} theme={deptTheme} />
+      <RoomSVG width={1200} height={200} theme={deptTheme} />
       <RoomSign theme={deptTheme} />
       <CornerCactus side="right" />
 
@@ -840,23 +812,8 @@ function CeoOffice({ agent, npcSize, onClick, forceThought, hasCelebration, part
   forceThought: string | null; hasCelebration: boolean; partyMode: boolean; theme: any;
 }) {
   const deptTheme = DEPT_THEMES.ceo;
-  const ref = useRef<HTMLDivElement>(null);
-  const [dims, setDims] = React.useState({ w: 900, h: 160 });
-
-  useEffect(() => {
-    if (!ref.current) return;
-    const ro = new ResizeObserver(entries => {
-      for (const e of entries) {
-        setDims({ w: Math.round(e.contentRect.width), h: Math.round(e.contentRect.height) });
-      }
-    });
-    ro.observe(ref.current);
-    return () => ro.disconnect();
-  }, []);
-
   return (
     <div
-      ref={ref}
       onClick={onClick}
       style={{
         position: 'relative',
@@ -874,7 +831,7 @@ function CeoOffice({ agent, npcSize, onClick, forceThought, hasCelebration, part
       onMouseEnter={e => { e.currentTarget.style.boxShadow = `0 0 28px ${deptTheme.accent}44`; }}
       onMouseLeave={e => { e.currentTarget.style.boxShadow = `0 0 20px ${deptTheme.accent}22`; }}
     >
-      <RoomSVG width={dims.w} height={dims.h} theme={deptTheme} isCeo />
+      <RoomSVG width={1200} height={160} theme={deptTheme} isCeo />
       <RoomSign theme={deptTheme} />
       <CornerCactus side="left" />
       <CornerCactus side="right" />
