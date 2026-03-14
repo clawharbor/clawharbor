@@ -125,17 +125,35 @@ export default function LandingPage() {
           BUT THEY'RE SIMS
         </h1>
 
+        {/* v1.0.0 badge */}
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '6px 16px',
+          background: 'linear-gradient(135deg, rgba(139,92,246,0.2) 0%, rgba(236,72,153,0.2) 100%)',
+          border: '1px solid rgba(139,92,246,0.5)',
+          borderRadius: 20,
+          marginBottom: 24,
+          fontSize: 12,
+          fontWeight: 700,
+          color: '#a5b4fc',
+          letterSpacing: '0.05em',
+        }}>
+          🚀 v1.0.0 — STABLE RELEASE
+        </div>
+
         {/* Subheadline */}
         <p style={{
           fontSize: 20,
           color: theme.textMuted,
           marginBottom: 40,
           lineHeight: 1.6,
-          maxWidth: 600,
+          maxWidth: 640,
           margin: '0 auto 40px',
         }}>
           Turn your OpenClaw agents into pixel art NPCs in a retro office.
-          See who's working, who's slacking, and what they're up to — at a glance.
+          Battles, burnout, payroll, live session feeds — all in one dashboard.
         </p>
 
         {/* CTA Buttons */}
@@ -248,6 +266,50 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {/* v1.0 Stats Bar */}
+      <div style={{
+        background: darkMode ? 'rgba(99,102,241,0.08)' : 'rgba(99,102,241,0.05)',
+        borderTop: '1px solid rgba(99,102,241,0.2)',
+        borderBottom: '1px solid rgba(99,102,241,0.2)',
+        padding: '32px 20px',
+      }}>
+        <div style={{
+          maxWidth: 900,
+          margin: '0 auto',
+          display: 'flex',
+          justifyContent: 'center',
+          flexWrap: 'wrap',
+          gap: 40,
+        }}>
+          {[
+            { value: '14', label: 'Features shipped' },
+            { value: '21', label: 'LLM models via Bankr' },
+            { value: '0', label: 'Config required' },
+            { value: '100%', label: 'Local & private' },
+            { value: '10s', label: 'To try the demo' },
+          ].map((stat, i) => (
+            <div key={i} style={{ textAlign: 'center' }}>
+              <div style={{
+                fontFamily: '"Press Start 2P", monospace',
+                fontSize: 28,
+                color: '#a5b4fc',
+                marginBottom: 6,
+              }}>
+                {stat.value}
+              </div>
+              <div style={{
+                fontSize: 12,
+                color: theme.textMuted,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+              }}>
+                {stat.label}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Features Grid */}
       <div style={{
         maxWidth: 1200,
@@ -258,11 +320,19 @@ export default function LandingPage() {
           fontFamily: '"Press Start 2P", monospace',
           fontSize: 24,
           textAlign: 'center',
-          marginBottom: 60,
+          marginBottom: 16,
           color: theme.text,
         }}>
-          WHY PEOPLE LOVE IT
+          WHAT'S IN v1.0.0
         </h2>
+        <p style={{
+          textAlign: 'center',
+          color: theme.textMuted,
+          fontSize: 15,
+          marginBottom: 48,
+        }}>
+          14 features. Battle system, burnout, payroll, live feeds, and more. All local. All yours.
+        </p>
 
         <div style={{
           display: 'grid',
@@ -283,7 +353,7 @@ export default function LandingPage() {
             {
               icon: '👾',
               title: 'Pixel Art NPCs',
-              desc: 'Your agents become charming retro characters. Like The Sims meets AI ops.',
+              desc: '8 hair styles, 5 accessories, 8 skin tones. Every agent gets a unique deterministic look.',
             },
             {
               icon: '⚡',
@@ -298,12 +368,42 @@ export default function LandingPage() {
             {
               icon: '💬',
               title: 'Water Cooler Chat',
-              desc: 'Agents chat with each other. DM any agent or broadcast to all from the dashboard.',
+              desc: 'Agents chat with each other using real AI. DM any agent or broadcast to all.',
+            },
+            {
+              icon: '⚔️',
+              title: 'Agent Battles',
+              desc: 'Two agents debate a topic. You vote for the winner. XP on the line. Powered by Bankr LLM.',
+              isNew: true,
+            },
+            {
+              icon: '🔥',
+              title: 'Burnout System',
+              desc: 'Agents accumulate fatigue. Fresh → Tired → Drained → Burnout → Crispy. Visual effects included.',
+              isNew: true,
+            },
+            {
+              icon: '🎬',
+              title: 'Office Replay',
+              desc: 'Rewind your office like a DVR. Snapshots every 30s, up to 2.4 hours of history.',
+              isNew: true,
+            },
+            {
+              icon: '💸',
+              title: 'Agent Payroll',
+              desc: 'Pay your AI agents in USDC, ETH, BNKR, or HARBOR on Base. Bankr or wallet — your choice.',
+              isNew: true,
+            },
+            {
+              icon: '📼',
+              title: 'Live Session Feed',
+              desc: 'Click any NPC to see their real-time tool calls, file edits, and reasoning. Debugging inverted.',
+              isNew: true,
             },
             {
               icon: '🎴',
               title: 'Trading Cards',
-              desc: 'Pokemon-style shareable agent cards with rarity tiers, stats, and XP. Share your team on social media.',
+              desc: 'Pokemon-style shareable agent cards with rarity tiers, stats, and XP.',
               link: '/card',
             },
             {
@@ -311,17 +411,24 @@ export default function LandingPage() {
               title: 'Chiptune Soundtrack',
               desc: 'Procedural 8-bit background music that evolves as your agents work. Toggle on/off anytime.',
             },
+            {
+              icon: '📊',
+              title: 'Stats Dashboard',
+              desc: 'XP trends, working streaks, accomplishment heatmaps. GitHub-style contribution graphs.',
+              link: '/stats',
+            },
           ].map((feature: any, i: number) => {
             const card = (
               <div
                 key={i}
                 style={{
                   background: theme.cardBg,
-                  border: `2px solid ${theme.cardBorder}`,
+                  border: `2px solid ${(feature as any).isNew ? 'rgba(139,92,246,0.5)' : theme.cardBorder}`,
                   borderRadius: 12,
                   padding: 24,
                   transition: 'transform 0.2s, border-color 0.2s',
                   cursor: feature.link ? 'pointer' : 'default',
+                  position: 'relative',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-4px)';
@@ -329,9 +436,25 @@ export default function LandingPage() {
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.borderColor = theme.cardBorder;
+                  e.currentTarget.style.borderColor = (feature as any).isNew ? 'rgba(139,92,246,0.5)' : theme.cardBorder;
                 }}
               >
+                {(feature as any).isNew && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 12,
+                    right: 12,
+                    fontSize: 9,
+                    fontWeight: 700,
+                    padding: '3px 8px',
+                    background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+                    color: '#fff',
+                    borderRadius: 4,
+                    letterSpacing: '0.05em',
+                  }}>
+                    v1.0
+                  </div>
+                )}
                 <div style={{ fontSize: 40, marginBottom: 16 }}>{feature.icon}</div>
                 <h3 style={{
                   fontFamily: '"Press Start 2P", monospace',
@@ -637,9 +760,9 @@ export default function LandingPage() {
           color: theme.text,
           lineHeight: 1.4,
         }}>
-          READY TO TURN YOUR
+          v1.0.0 IS LIVE.
           <br />
-          AGENTS INTO SIMS?
+          LET'S GO.
         </h2>
         <p style={{
           fontSize: 18,
@@ -647,6 +770,8 @@ export default function LandingPage() {
           marginBottom: 40,
           lineHeight: 1.6,
         }}>
+          Battle system. Burnout. Payroll. Live feeds. Office Replay.
+          <br />
           No signup. No credit card. No bullshit. Just vibes.
         </p>
         <div style={{
@@ -701,7 +826,7 @@ export default function LandingPage() {
           color: theme.textDim,
           marginBottom: 12,
         }}>
-          Open Source • AGPL-3.0 • Made with 💜 by Claw Harbor
+          Open Source • AGPL-3.0 • v1.0.0 • Made with 💜 by Claw Harbor
         </p>
         <p style={{
           fontSize: 10,
