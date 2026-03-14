@@ -293,7 +293,6 @@ export default function LandingPage() {
           justifyContent: 'center',
           flexWrap: 'wrap',
           gap: isMobile ? 20 : 40,
-          flexWrap: 'wrap',
         }}>
           {[
             { value: '14', label: 'Features shipped' },
