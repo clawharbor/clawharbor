@@ -415,7 +415,8 @@ function DeptRoom({
   return (
     <div style={{
       position:'relative',
-      minHeight:280,
+      minHeight:240,
+      maxHeight:320,
       borderRadius:4,overflow:'hidden',
       border:`2.5px solid ${dept.wall}`,
       boxShadow:workingAgents.length>0?`0 0 12px ${dept.accent}22`:'none',
@@ -653,6 +654,15 @@ function Hallway() {
   );
 }
 
+
+// ─── Helper: assign agent to exactly one department ───────────────────────────
+function agentDept(agent: Agent): DeptDef {
+  for (const dept of DEPARTMENTS.slice(0, -1)) { // skip catch-all
+    if (dept.matchRole(agent.role)) return dept;
+  }
+  return DEPARTMENTS[DEPARTMENTS.length - 1];
+}
+
 // ─── Main export ───────────────────────────────────────────────────────────────
 export interface MultiRoomGridProps {
   agents: Agent[];
@@ -679,14 +689,14 @@ export function MultiRoomGrid({
   const workingAgents = nonOwner.filter(a => a.status === 'working');
   const idleAgents = nonOwner.filter(a => a.status !== 'working');
 
-  // Build department list from ALL non-owner agents (working + idle)
-  // so rooms are always visible regardless of agent status
-  const usedDepts: DeptDef[] = [];
-  for (const dept of DEPARTMENTS) {
-    const hasAgent = nonOwner.some(a => dept.matchRole(a.role));
-    if (hasAgent) usedDepts.push(dept);
-    if (usedDepts.length >= 6) break; // max 6 dept rooms like claw-empire
+  // Build dept rooms from unique depts used by agents
+  // Each agent belongs to exactly one dept
+  const deptMap = new Map<string, DeptDef>();
+  for (const agent of nonOwner) {
+    const dept = agentDept(agent);
+    if (!deptMap.has(dept.key)) deptMap.set(dept.key, dept);
   }
+  const usedDepts: DeptDef[] = Array.from(deptMap.values());
 
   const cols = isMobile ? 1 : usedDepts.length <= 2 ? 2 : 3;
 
@@ -713,8 +723,8 @@ export function MultiRoomGrid({
         padding:'0 0 10px',
       }}>
         {usedDepts.map(dept => {
-          // Only working agents appear in their dept room
-          const deptWorking = workingAgents.filter(a => dept.matchRole(a.role));
+          // Only working agents whose PRIMARY dept is this room
+          const deptWorking = workingAgents.filter(a => agentDept(a).key === dept.key);
           return (
             <DeptRoom
               key={dept.key}
