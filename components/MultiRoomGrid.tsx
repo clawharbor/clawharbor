@@ -1,15 +1,20 @@
 'use client';
 
 /**
- * MultiRoomGrid — claw-empire style layout
+ * MultiRoomGrid — claw-empire style with dept room transit animation
+ *
+ * Agent movement flow:
+ *   idle → working:   Break Room → [dept room ~2s] → Work Room
+ *   working → idle:   Work Room  → [dept room ~2s] → Break Room
  *
  * Layout (top to bottom):
- * 1. WORK ROOM — full width, all working agents gathered here
- * 2. DEPT ROOMS — 6 fixed rooms (always visible, decoration only)
- * 3. BREAK ROOM — full width, all idle agents gathered here
+ *   CEO Office (full width, if owner exists)
+ *   Work Room  (full width, working agents)
+ *   Dept Rooms (3×2 grid, transit agents visible here)
+ *   Break Room (full width, idle agents)
  */
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { Agent } from './types';
 import { NPC } from './NPC';
 import { NPCParticles } from './NPCParticles';
@@ -17,7 +22,7 @@ import { ChatBubble } from './ChatBubble';
 import { CooldownTimer } from './CooldownTimer';
 import { prettifyTask } from './utils';
 
-// ─── Palette (claw-empire light) ──────────────────────────────────────────────
+// ─── Palette ──────────────────────────────────────────────────────────────────
 const P = {
   creamWhite: '#f8f3ec',
   creamDeep:  '#ebdfcf',
@@ -28,31 +33,49 @@ const P = {
   slate:      '#586378',
 };
 
-// ─── Fixed 6 department rooms ──────────────────────────────────────────────────
+// ─── Fixed 6 dept rooms ───────────────────────────────────────────────────────
 const DEPT_ROOMS = [
-  { key: 'product',     label: 'Product',     icon: '📋', floor1: '#f0e1c5', floor2: '#eddaba', wall: '#ae9871', accent: '#d4a85a' },
-  { key: 'engineering', label: 'Engineering', icon: '💻', floor1: '#d8e8f5', floor2: '#cce1f2', wall: '#6c96b7', accent: '#5a9fd4' },
-  { key: 'data',        label: 'Data',        icon: '📊', floor1: '#d0eede', floor2: '#c4ead5', wall: '#6eaa89', accent: '#5ac48a' },
-  { key: 'design',      label: 'Design',      icon: '🎨', floor1: '#e8def2', floor2: '#e1d4ee', wall: '#9378ad', accent: '#9a6fc4' },
-  { key: 'operations',  label: 'Operations',  icon: '⚙️',  floor1: '#f0cbcb', floor2: '#edc0c0', wall: '#ae7979', accent: '#d46a6a' },
-  { key: 'devsecops',   label: 'DevSecOps',   icon: '🛡️',  floor1: '#f0d5c5', floor2: '#edcdba', wall: '#ae8871', accent: '#d4885a' },
+  { key: 'product',     label: 'Product',     icon: '📋', floor1: '#f0e1c5', floor2: '#eddaba', wall: '#ae9871', accent: '#d4a85a', matchRole: (r:string) => /product|pm|manager|lead|strategy/i.test(r) },
+  { key: 'engineering', label: 'Engineering', icon: '💻', floor1: '#d8e8f5', floor2: '#cce1f2', wall: '#6c96b7', accent: '#5a9fd4', matchRole: (r:string) => /engineer|dev|code|frontend|backend|fullstack|software/i.test(r) },
+  { key: 'data',        label: 'Data',        icon: '📊', floor1: '#d0eede', floor2: '#c4ead5', wall: '#6eaa89', accent: '#5ac48a', matchRole: (r:string) => /data|analyst|research|science|ml|ai/i.test(r) },
+  { key: 'design',      label: 'Design',      icon: '🎨', floor1: '#e8def2', floor2: '#e1d4ee', wall: '#9378ad', accent: '#9a6fc4', matchRole: (r:string) => /design|ui|ux|creative|art/i.test(r) },
+  { key: 'operations',  label: 'Operations',  icon: '⚙️',  floor1: '#f0cbcb', floor2: '#edc0c0', wall: '#ae7979', accent: '#d46a6a', matchRole: (r:string) => /ops|devops|infra|deploy|sre|operation|security/i.test(r) },
+  { key: 'devsecops',   label: 'DevSecOps',   icon: '🛡️',  floor1: '#f0d5c5', floor2: '#edcdba', wall: '#ae8871', accent: '#d4885a', matchRole: (r:string) => true },
 ];
 
 const WORK_THEME  = { floor1: '#d8e8f5', floor2: '#cce1f2', wall: '#6c96b7', accent: '#5a9fd4' };
 const BREAK_THEME = { floor1: '#f7e2b7', floor2: '#f6dead', wall: '#a99c83', accent: '#f0c878' };
 const CEO_THEME   = { floor1: '#e5d9b9', floor2: '#dfd0a8', wall: '#998243', accent: '#a77d0c' };
 
+const TRANSIT_DURATION_MS = 2000;
+
+// ─── Get agent's home dept ────────────────────────────────────────────────────
+function getAgentDept(role: string) {
+  for (const dept of DEPT_ROOMS.slice(0, -1)) {
+    if (dept.matchRole(role)) return dept;
+  }
+  return DEPT_ROOMS[DEPT_ROOMS.length - 1];
+}
+
+// ─── Transit state ────────────────────────────────────────────────────────────
+interface TransitAgent {
+  agent: Agent;
+  direction: 'to-work' | 'to-break'; // where they're heading
+  deptKey: string;
+  startedAt: number;
+}
+
 // ─── Color blend ──────────────────────────────────────────────────────────────
 function blend(h1: string, h2: string, t: number): string {
-  const p = (h: string) => { const c = h.replace('#',''); return [parseInt(c.slice(0,2),16),parseInt(c.slice(2,4),16),parseInt(c.slice(4,6),16)]; };
+  const p = (h: string) => { const c=h.replace('#',''); return [parseInt(c.slice(0,2),16),parseInt(c.slice(2,4),16),parseInt(c.slice(4,6),16)]; };
   const [r1,g1,b1]=p(h1),[r2,g2,b2]=p(h2);
   return `#${[Math.round(r1+(r2-r1)*t),Math.round(g1+(g2-g1)*t),Math.round(b1+(b2-b1)*t)].map(v=>v.toString(16).padStart(2,'0')).join('')}`;
 }
 
-// ─── SVG Room Background ──────────────────────────────────────────────────────
+// ─── SVG Room background ──────────────────────────────────────────────────────
 interface Theme { floor1:string; floor2:string; wall:string; accent:string }
 
-function RoomBg({ theme, isCeo }: { theme: Theme; isCeo?: boolean }) {
+function RoomBg({ theme, isCeo }: { theme:Theme; isCeo?:boolean }) {
   const W=600, H=260, TILE=18;
   const tiles: React.ReactNode[] = [];
   for (let ty=0;ty<H;ty+=TILE) for (let tx=0;tx<W;tx+=TILE) {
@@ -61,22 +84,16 @@ function RoomBg({ theme, isCeo }: { theme: Theme; isCeo?: boolean }) {
     tiles.push(<line key={`h${tx}-${ty}`} x1={tx} y1={ty} x2={tx+TILE} y2={ty} stroke="white" strokeWidth={0.3} strokeOpacity={0.15}/>);
     tiles.push(<line key={`v${tx}-${ty}`} x1={tx} y1={ty} x2={tx} y2={ty+TILE} stroke="white" strokeWidth={0.3} strokeOpacity={0.1}/>);
   }
-
   const flagCount=28, step=W/flagCount;
   const flags=Array.from({length:flagCount},(_,i)=>{
     const fx=i*step+step/2, fy=i%2===0?18:21;
     return <polygon key={`f${i}`} points={`${fx-4},${fy} ${fx+4},${fy} ${fx},${fy+7}`}
       fill={i%2===0?blend(theme.accent,'#ffffff',0.2):blend(theme.wall,'#ffffff',0.4)} fillOpacity={0.55}/>;
   });
-
-  const topH=32;
   const accKey=theme.accent.replace('#','');
-
   return (
-    <svg width="100%" height="100%" viewBox={`0 0 ${W} ${H}`}
-      preserveAspectRatio="xMidYMid slice"
-      style={{position:'absolute',inset:0,display:'block'}}
-      xmlns="http://www.w3.org/2000/svg">
+    <svg width="100%" height="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice"
+      style={{position:'absolute',inset:0,display:'block'}} xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id={`wg${accKey}`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={blend(theme.wall,'#ffffff',0.24)} stopOpacity={0.75}/>
@@ -84,11 +101,10 @@ function RoomBg({ theme, isCeo }: { theme: Theme; isCeo?: boolean }) {
         </linearGradient>
       </defs>
       {tiles}
-      <rect x={1} y={1} width={W-2} height={topH} fill={`url(#wg${accKey})`}/>
+      <rect x={1} y={1} width={W-2} height={32} fill={`url(#wg${accKey})`}/>
       <rect x={1} y={H-14} width={W-2} height={10} fill="black" fillOpacity={0.05}/>
       <line x1={12} y1={19} x2={W-12} y2={19} stroke="#33261a" strokeWidth={1} strokeOpacity={0.6}/>
       {flags}
-      {/* Windows */}
       {[W/2-60,W/2-20,W/2+20].map((wx,i)=>{
         const wy=18,ww=22,wh=16,pw=(ww-5)/2,ph=(wh-5)/2;
         return <g key={i}>
@@ -99,48 +115,36 @@ function RoomBg({ theme, isCeo }: { theme: Theme; isCeo?: boolean }) {
           <rect x={wx+pw+3} y={wy+ph+3} width={pw} height={ph} fill="#8abcdd"/>
           <rect x={wx+ww/2-0.6} y={wy+2} width={1.2} height={wh-4} fill="#7a6a58" fillOpacity={0.4}/>
           <rect x={wx+2} y={wy+wh/2} width={ww-4} height={1} fill="#7a6a58" fillOpacity={0.35}/>
-          <line x1={wx+1} y1={wy+1} x2={wx+3} y2={wy+wh*0.4} stroke="#d8b0b8" strokeWidth={1.5} strokeOpacity={0.35}/>
-          <line x1={wx+ww-1} y1={wy+1} x2={wx+ww-3} y2={wy+wh*0.4} stroke="#d8b0b8" strokeWidth={1.5} strokeOpacity={0.35}/>
         </g>;
       })}
-      {/* Bookshelf */}
       <rect x={4} y={18} width={22} height={28} rx={1} fill="#c8a870" fillOpacity={0.7} stroke="#a88050" strokeWidth={0.5}/>
       {['#c47a4a','#6a9fd8','#d47888','#7ab878','#c8b848'].map((bc,i)=>{
         const bx=6+i*3.8, bh=8+(i*1.3)%6;
         return <rect key={i} x={bx} y={44-bh} width={2.8} height={bh} rx={0.4} fill={bc} fillOpacity={0.7}/>;
       })}
-      {/* Whiteboard */}
       <rect x={W-38} y={18} width={32} height={22} rx={1} fill="#f4f0e8" stroke="#c8b898" strokeWidth={0.7}/>
       <rect x={W-36} y={20} width={28} height={15} rx={0.5} fill="white" fillOpacity={0.7}/>
       <line x1={W-34} y1={25} x2={W-24} y2={25} stroke="#8ab8d8" strokeWidth={0.6} strokeOpacity={0.5}/>
       <line x1={W-34} y1={28} x2={W-18} y2={28} stroke="#d87878" strokeWidth={0.6} strokeOpacity={0.45}/>
-      <line x1={W-34} y1={31} x2={W-26} y2={31} stroke="#7ac87a" strokeWidth={0.6} strokeOpacity={0.5}/>
+      <line x1={W-38} y1={38} width={32} height={3} rx={0.5} fill="#d0c0a0"/>
       <rect x={W-38} y={38} width={32} height={3} rx={0.5} fill="#d0c0a0"/>
-      {/* Ceiling light */}
       <rect x={W/2-14} y={12} width={28} height={3} rx={1} fill="#c8b898"/>
       <rect x={W/2-8} y={15} width={16} height={5} rx={2} fill={blend(theme.accent,'#ffffff',0.4)} fillOpacity={0.7}/>
-      <ellipse cx={W/2} cy={22} rx={22} ry={7} fill={theme.accent} fillOpacity={0.06}/>
-      {/* Wall clock */}
       <circle cx={W-16} cy={12} r={8} fill="#f0e8d8" stroke="#a09080" strokeWidth={0.7}/>
       <circle cx={W-16} cy={12} r={1} fill="#3a2a1a"/>
       <line x1={W-16} y1={12} x2={W-18} y2={8} stroke="#3a2a1a" strokeWidth={0.8} strokeLinecap="round"/>
       <line x1={W-16} y1={12} x2={W-15} y2={7} stroke="#3a2a1a" strokeWidth={0.6} strokeLinecap="round"/>
-      {/* CEO table */}
       {isCeo && <>
-        <ellipse cx={W/2+2} cy={H-25} rx={92} ry={10} fill="black" fillOpacity={0.05}/>
         <ellipse cx={W/2} cy={H-28} rx={90} ry={12} fill={blend(theme.accent,'#ffffff',0.5)} fillOpacity={0.8}/>
         <ellipse cx={W/2} cy={H-28} rx={90} ry={12} stroke={blend(theme.accent,'#ffffff',0.2)} strokeWidth={1.5} fill="none"/>
         <text x={W/2} y={H-25} textAnchor="middle" fontSize={8} fontFamily="system-ui" fill={P.cocoa} fillOpacity={0.65} fontWeight="bold">6P COLLAB TABLE</text>
       </>}
-      {/* Room border */}
       <rect x={0} y={0} width={W} height={H} fill="none" stroke={theme.wall} strokeWidth={2.5} rx={3}/>
-      {/* Door gap */}
       <rect x={W/2-14} y={0} width={28} height={3} fill={P.creamWhite}/>
     </svg>
   );
 }
 
-// ─── Room sign ────────────────────────────────────────────────────────────────
 function RoomSign({ label, icon, accent }: { label:string; icon:string; accent:string }) {
   return (
     <div style={{position:'absolute',top:0,left:'50%',transform:'translateX(-50%)',
@@ -153,7 +157,6 @@ function RoomSign({ label, icon, accent }: { label:string; icon:string; accent:s
   );
 }
 
-// ─── Cactus ───────────────────────────────────────────────────────────────────
 function Cactus({ side='right' }: { side?:'left'|'right' }) {
   return (
     <div style={{position:'absolute',bottom:8,[side]:8,display:'flex',flexDirection:'column',alignItems:'center',zIndex:4,opacity:0.8}}>
@@ -169,27 +172,21 @@ function Cactus({ side='right' }: { side?:'left'|'right' }) {
   );
 }
 
-// ─── Pixel desk ───────────────────────────────────────────────────────────────
 function Desk({ accent, isWorking }: { accent:string; isWorking:boolean }) {
   return (
     <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
       <div style={{width:36,height:24,background:'#3e4858',border:'1px solid #5a6678',borderRadius:3,position:'relative'}}>
-        <div style={{position:'absolute',inset:'2px 2px 4px 2px',background:isWorking?'#89c8b9':'#1e2836',borderRadius:1,overflow:'hidden'}}>
-          {isWorking && <div style={{padding:'2px',display:'flex',flexDirection:'column',gap:1.5}}>
-            {['#e1fff8','#f8d876','#a8d8ea','#f0b8c8'].map((c,i)=>(
-              <div key={i} style={{height:1.5,width:`${42+(i*17)%38}%`,background:c,opacity:0.6,borderRadius:1}}/>
-            ))}
-          </div>}
+        <div style={{position:'absolute',inset:'2px 2px 4px 2px',background:isWorking?'#89c8b9':'#1e2836',borderRadius:1,overflow:'hidden',display:'flex',flexDirection:'column',gap:1.5,padding:2}}>
+          {isWorking && ['#e1fff8','#f8d876','#a8d8ea'].map((c,i)=>(
+            <div key={i} style={{height:1.5,width:`${42+(i*17)%38}%`,background:c,opacity:0.6,borderRadius:1}}/>
+          ))}
         </div>
         <div style={{position:'absolute',bottom:-4,left:'50%',transform:'translateX(-50%)',width:4,height:4,background:'#4e5a70'}}/>
         <div style={{position:'absolute',bottom:-6,left:'50%',transform:'translateX(-50%)',width:12,height:2,background:'#5e6a82',borderRadius:1}}/>
       </div>
-      <div style={{
-        width:54,height:16,
+      <div style={{width:54,height:16,
         background:'linear-gradient(180deg,#e0c490 0%,#d4b478 50%,#be9860 100%)',
-        border:'1px solid #b89060',borderRadius:'2px 2px 4px 4px',
-        position:'relative',
-      }}>
+        border:'1px solid #b89060',borderRadius:'2px 2px 4px 4px',position:'relative'}}>
         <div style={{position:'absolute',top:1,left:'50%',transform:'translateX(-50%)',width:20,height:6,background:'#788498',borderRadius:1.5}}/>
         <div style={{position:'absolute',left:2,top:1,width:8,height:10,background:'#fffbf4',border:'0.5px solid #e0d8cc'}}/>
         <div style={{position:'absolute',right:2,top:1,width:8,height:9,background:'#f0dee5',borderRadius:'0 0 2px 2px',display:'flex',alignItems:'center',justifyContent:'center'}}>
@@ -200,29 +197,40 @@ function Desk({ accent, isWorking }: { accent:string; isWorking:boolean }) {
   );
 }
 
-// ─── Agent NPC slot (used in Work Room & Break Room) ─────────────────────────
-interface AgentSlotProps {
-  agent: Agent; npcSize: number; onClick: ()=>void;
-  forceThought: string|null; hasCelebration: boolean; partyMode: boolean;
-  chatBubble: {message:string;color:string}|null;
-  expandedTask: string|null; setExpandedTask?: (id:string|null)=>void;
-  theme: any; accent: string; isWorking: boolean;
-}
-
+// ─── Agent NPC slot ───────────────────────────────────────────────────────────
 function AgentSlot({ agent, npcSize, onClick, forceThought, hasCelebration, partyMode,
-  chatBubble, expandedTask, setExpandedTask, theme, accent, isWorking }: AgentSlotProps) {
+  chatBubble, expandedTask, setExpandedTask, accent, isWorking, isTransit }: {
+  agent:Agent; npcSize:number; onClick:()=>void;
+  forceThought:string|null; hasCelebration:boolean; partyMode:boolean;
+  chatBubble:{message:string;color:string}|null;
+  expandedTask:string|null; setExpandedTask?:(id:string|null)=>void;
+  accent:string; isWorking:boolean; isTransit?:boolean;
+}) {
   return (
-    <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:2,position:'relative',zIndex:5,cursor:'pointer'}} onClick={onClick}>
+    <div onClick={onClick} style={{
+      display:'flex',flexDirection:'column',alignItems:'center',gap:2,
+      position:'relative',zIndex:5,cursor:'pointer',
+      opacity: isTransit ? 0.85 : 1,
+      animation: isTransit ? 'transitPulse 1s ease-in-out infinite' : undefined,
+    }}>
       {/* Name badge */}
       <div style={{display:'flex',alignItems:'center',gap:3,
         background:'rgba(255,255,255,0.88)',border:`1px solid ${accent}66`,
         borderRadius:4,padding:'1px 6px',boxShadow:'0 1px 3px rgba(0,0,0,0.1)'}}>
-        {isWorking && <div style={{width:6,height:6,borderRadius:'50%',background:'#ef4444',boxShadow:'0 0 4px #ef4444'}}/>}
+        {isWorking && !isTransit && <div style={{width:6,height:6,borderRadius:'50%',background:'#ef4444',boxShadow:'0 0 4px #ef4444'}}/>}
+        {isTransit && <div style={{width:6,height:6,borderRadius:'50%',background:'#f59e0b',boxShadow:'0 0 4px #f59e0b'}}/>}
         <span style={{fontFamily:'"Press Start 2P", monospace',fontSize:6,color:P.ink}}>{agent.name}</span>
         <span style={{fontSize:7,fontWeight:700,color:'white',background:accent,borderRadius:2,padding:'0 3px'}}>{agent.level}</span>
       </div>
-      {/* Task */}
-      {isWorking && agent.task && (
+      {/* Transit label */}
+      {isTransit && (
+        <div style={{background:P.creamWhite,border:`1px solid #f59e0b66`,
+          borderRadius:4,padding:'1px 6px',fontSize:7,color:'#92400e'}}>
+          🚶 Passing through...
+        </div>
+      )}
+      {/* Task label */}
+      {isWorking && !isTransit && agent.task && (
         <div style={{position:'relative'}}>
           <div onClick={e=>{e.stopPropagation();setExpandedTask?.(expandedTask===agent.id?null:agent.id);}}
             style={{background:P.creamWhite,border:`1px solid ${accent}55`,
@@ -246,39 +254,39 @@ function AgentSlot({ agent, npcSize, onClick, forceThought, hasCelebration, part
         </div>
       )}
       {/* Idle status */}
-      {!isWorking && (agent.nextTaskAt
+      {!isWorking && !isTransit && (agent.nextTaskAt
         ? <CooldownTimer targetMs={agent.nextTaskAt}/>
         : <div style={{background:P.creamWhite,border:`1px solid ${BREAK_THEME.wall}55`,
             borderRadius:4,padding:'1px 6px',fontSize:7,color:P.cocoa}}>
             {['☕ On break','📖 Reading docs','🎮 Taking 5','💭 Thinking...'][agent.id.split('').reduce((s:number,c:string)=>s+c.charCodeAt(0),0)%4]}
           </div>
       )}
-      {/* Chat bubble */}
-      {chatBubble && <ChatBubble message={chatBubble.message} agentColor={chatBubble.color} size={npcSize}/>}
+      {chatBubble && !isTransit && <ChatBubble message={chatBubble.message} agentColor={chatBubble.color} size={npcSize}/>}
       {/* NPC */}
       <div style={{position:'relative'}}>
         <NPC agent={agent} size={npcSize} onClick={onClick} forceThought={forceThought}
           hasCelebration={hasCelebration} partyMode={partyMode}/>
-        <div style={{position:'absolute',inset:-8,pointerEvents:'none',zIndex:0}}>
-          <NPCParticles agentStatus={agent.status as 'working'|'idle'} agentMood={agent.mood as any}
-            agentRole={agent.role} width={Math.round(64*npcSize)+16} height={Math.round(64*npcSize)+16}/>
-        </div>
+        {!isTransit && (
+          <div style={{position:'absolute',inset:-8,pointerEvents:'none',zIndex:0}}>
+            <NPCParticles agentStatus={agent.status as 'working'|'idle'} agentMood={agent.mood as any}
+              agentRole={agent.role} width={Math.round(64*npcSize)+16} height={Math.round(64*npcSize)+16}/>
+          </div>
+        )}
       </div>
-      {/* Chair + Desk */}
       <div style={{width:14,height:7,background:blend(accent,P.creamWhite,0.2),borderRadius:'2px 2px 0 0',border:`1px solid ${accent}55`,marginBottom:-2}}/>
-      <Desk accent={accent} isWorking={isWorking}/>
+      <Desk accent={accent} isWorking={isWorking && !isTransit}/>
       <div style={{fontSize:8,color:P.slate,marginTop:2}}>{agent.role}</div>
     </div>
   );
 }
 
-// ─── 1. WORK ROOM — full width, all working agents ────────────────────────────
+// ─── Work Room ────────────────────────────────────────────────────────────────
 function WorkRoom({ agents, npcSize, onClickAgent, forceThoughts, celebrations,
-  partyMode, chatBubbles, expandedTask, setExpandedTask, theme }: {
-  agents: Agent[]; npcSize: number; onClickAgent:(a:Agent)=>void;
-  forceThoughts: Record<string,string>; celebrations:{agentId:string}[];
-  partyMode: boolean; chatBubbles: Record<string,{message:string;color:string}>;
-  expandedTask: string|null; setExpandedTask:(id:string|null)=>void; theme: any;
+  partyMode, chatBubbles, expandedTask, setExpandedTask }: {
+  agents:Agent[]; npcSize:number; onClickAgent:(a:Agent)=>void;
+  forceThoughts:Record<string,string>; celebrations:{agentId:string}[];
+  partyMode:boolean; chatBubbles:Record<string,{message:string;color:string}>;
+  expandedTask:string|null; setExpandedTask:(id:string|null)=>void;
 }) {
   return (
     <div style={{position:'relative',minHeight:200,borderRadius:4,overflow:'hidden',
@@ -288,19 +296,17 @@ function WorkRoom({ agents, npcSize, onClickAgent, forceThoughts, celebrations,
       padding:'30px 20px 14px'}}>
       <RoomBg theme={WORK_THEME}/>
       <RoomSign label="Work Room" icon="💻" accent={WORK_THEME.accent}/>
-      <Cactus side="left"/>
-      <Cactus side="right"/>
+      <Cactus side="left"/><Cactus side="right"/>
       <div style={{position:'relative',zIndex:5,display:'flex',flexWrap:'wrap',
         gap:24,justifyContent:'center',alignItems:'flex-end',width:'100%'}}>
-        {agents.length > 0 ? agents.map(agent=>(
-          <AgentSlot key={agent.id} agent={agent} npcSize={npcSize}
-            onClick={()=>onClickAgent(agent)}
-            forceThought={forceThoughts[agent.id]||null}
-            hasCelebration={celebrations.some(c=>c.agentId===agent.id)}
-            partyMode={partyMode}
-            chatBubble={chatBubbles[agent.id]||null}
+        {agents.length > 0 ? agents.map(a=>(
+          <AgentSlot key={a.id} agent={a} npcSize={npcSize}
+            onClick={()=>onClickAgent(a)}
+            forceThought={forceThoughts[a.id]||null}
+            hasCelebration={celebrations.some(c=>c.agentId===a.id)}
+            partyMode={partyMode} chatBubble={chatBubbles[a.id]||null}
             expandedTask={expandedTask} setExpandedTask={setExpandedTask}
-            theme={theme} accent={WORK_THEME.accent} isWorking={true}/>
+            accent={WORK_THEME.accent} isWorking={true}/>
         )) : (
           <div style={{fontFamily:'"Press Start 2P", monospace',fontSize:7,
             color:`${WORK_THEME.wall}99`,padding:'16px 0'}}>
@@ -312,45 +318,60 @@ function WorkRoom({ agents, npcSize, onClickAgent, forceThoughts, celebrations,
   );
 }
 
-// ─── 2. DEPT ROOMS — 6 fixed decorative rooms ─────────────────────────────────
-function DeptRoomGrid() {
+// ─── Dept Rooms (transit zone) ────────────────────────────────────────────────
+function DeptRooms({ transitAgents, npcSize, onClickAgent, forceThoughts, celebrations, partyMode }: {
+  transitAgents: TransitAgent[]; npcSize:number; onClickAgent:(a:Agent)=>void;
+  forceThoughts:Record<string,string>; celebrations:{agentId:string}[]; partyMode:boolean;
+}) {
   return (
     <div style={{display:'grid',gridTemplateColumns:'repeat(3, 1fr)',gap:8}}>
-      {DEPT_ROOMS.map(dept => (
-        <div key={dept.key} style={{position:'relative',minHeight:90,
-          borderRadius:4,overflow:'hidden',border:`2px solid ${dept.wall}`,
-          opacity:0.85}}>
-          <RoomBg theme={dept}/>
-          <RoomSign label={dept.label} icon={dept.icon} accent={dept.accent}/>
-          {/* Empty desk decoration */}
-          <div style={{position:'relative',zIndex:5,display:'flex',
-            justifyContent:'center',alignItems:'flex-end',
-            padding:'24px 8px 10px',gap:16}}>
-            <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
-              <Desk accent={dept.accent} isWorking={false}/>
-            </div>
-            <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
-              <Desk accent={dept.accent} isWorking={false}/>
+      {DEPT_ROOMS.map(dept => {
+        const passing = transitAgents.filter(t => t.deptKey === dept.key);
+        return (
+          <div key={dept.key} style={{position:'relative',minHeight:180,
+            borderRadius:4,overflow:'hidden',border:`2px solid ${dept.wall}`,
+            display:'flex',flexDirection:'column',alignItems:'center',
+            justifyContent:'flex-end',padding:'28px 12px 12px',
+            boxShadow: passing.length>0?`0 0 12px ${dept.accent}44`:'none',
+            transition:'box-shadow 0.3s'}}>
+            <RoomBg theme={dept}/>
+            <RoomSign label={dept.label} icon={dept.icon} accent={dept.accent}/>
+            <Cactus side="right"/>
+            <div style={{position:'relative',zIndex:5,display:'flex',flexWrap:'wrap',
+              gap:16,justifyContent:'center',alignItems:'flex-end',width:'100%'}}>
+              {passing.length > 0 ? passing.map(({agent}) => (
+                <AgentSlot key={agent.id} agent={agent} npcSize={npcSize * 0.85}
+                  onClick={()=>onClickAgent(agent)}
+                  forceThought={forceThoughts[agent.id]||null}
+                  hasCelebration={false} partyMode={partyMode}
+                  chatBubble={null} expandedTask={null}
+                  accent={dept.accent} isWorking={false} isTransit={true}/>
+              )) : (
+                /* empty desk always visible */
+                <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
+                  <Desk accent={dept.accent} isWorking={false}/>
+                  <div style={{fontSize:7,color:`${dept.wall}77`,marginTop:4,
+                    fontFamily:'system-ui'}}>Empty</div>
+                </div>
+              )}
             </div>
           </div>
-          <Cactus side="right"/>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
 
-// ─── 3. BREAK ROOM — full width, all idle agents ─────────────────────────────
+// ─── Break Room ───────────────────────────────────────────────────────────────
 function BreakRoom({ agents, npcSize, onClickAgent, forceThoughts,
   celebrations, partyMode, chatBubbles }: {
-  agents: Agent[]; npcSize: number; onClickAgent:(a:Agent)=>void;
-  forceThoughts: Record<string,string>; celebrations:{agentId:string}[];
-  partyMode: boolean; chatBubbles: Record<string,{message:string;color:string}>;
+  agents:Agent[]; npcSize:number; onClickAgent:(a:Agent)=>void;
+  forceThoughts:Record<string,string>; celebrations:{agentId:string}[];
+  partyMode:boolean; chatBubbles:Record<string,{message:string;color:string}>;
 }) {
   return (
     <div style={{position:'relative',minHeight:agents.length>0?180:110,
-      borderRadius:4,overflow:'hidden',
-      border:`2.5px solid ${BREAK_THEME.wall}`,
+      borderRadius:4,overflow:'hidden',border:`2.5px solid ${BREAK_THEME.wall}`,
       display:'flex',flexDirection:'column',padding:'32px 24px 16px'}}>
       <RoomBg theme={BREAK_THEME}/>
       <RoomSign label="Break Room" icon="☕" accent={BREAK_THEME.accent}/>
@@ -376,19 +397,17 @@ function BreakRoom({ agents, npcSize, onClickAgent, forceThoughts,
           <div style={{width:68,height:26,background:'#90b8c8',borderRadius:'4px 4px 3px 3px',border:'1px solid #708890'}}/>
         </div>
       </div>
-      {/* Idle agents */}
       <div style={{position:'relative',zIndex:5,display:'flex',flexWrap:'wrap',
         gap:24,justifyContent:'center',alignItems:'flex-end',
         minHeight:agents.length>0?110:30}}>
-        {agents.length>0 ? agents.map((a,idx)=>(
+        {agents.length > 0 ? agents.map(a=>(
           <AgentSlot key={a.id} agent={a} npcSize={npcSize*0.85}
             onClick={()=>onClickAgent(a)}
             forceThought={forceThoughts[a.id]||null}
             hasCelebration={celebrations.some(c=>c.agentId===a.id)}
-            partyMode={partyMode}
-            chatBubble={chatBubbles[a.id]||null}
+            partyMode={partyMode} chatBubble={chatBubbles[a.id]||null}
             expandedTask={null}
-            theme={{}} accent={BREAK_THEME.accent} isWorking={false}/>
+            accent={BREAK_THEME.accent} isWorking={false}/>
         )) : (
           <div style={{fontFamily:'"Press Start 2P", monospace',fontSize:7,
             color:`${BREAK_THEME.wall}99`,padding:'8px 16px'}}>
@@ -415,8 +434,7 @@ function CeoOffice({ owner, npcSize, onClick, forceThought, hasCelebration, part
       onMouseLeave={e=>e.currentTarget.style.boxShadow=`0 0 16px ${CEO_THEME.accent}22`}>
       <RoomBg theme={CEO_THEME} isCeo/>
       <RoomSign label="CEO Office" icon="👑" accent={CEO_THEME.accent}/>
-      <Cactus side="left"/>
-      <Cactus side="right"/>
+      <Cactus side="left"/><Cactus side="right"/>
       <div style={{position:'relative',zIndex:5,display:'flex',flexDirection:'column',alignItems:'center',gap:2}}>
         <div style={{background:'rgba(255,255,255,0.9)',border:`1px solid ${CEO_THEME.wall}`,
           borderRadius:4,padding:'1px 7px',boxShadow:'0 1px 3px rgba(0,0,0,0.1)'}}>
@@ -437,7 +455,6 @@ function CeoOffice({ owner, npcSize, onClick, forceThought, hasCelebration, part
   );
 }
 
-// ─── Hallway ──────────────────────────────────────────────────────────────────
 function Hallway() {
   return (
     <div style={{height:20,
@@ -467,8 +484,62 @@ export function MultiRoomGrid({
 }: MultiRoomGridProps) {
   const owner = agents.find(a => a.id === '_owner');
   const nonOwner = agents.filter(a => a.id !== '_owner');
-  const working = nonOwner.filter(a => a.status === 'working');
-  const idle = nonOwner.filter(a => a.status !== 'working');
+
+  // ── Transit system: track status changes, animate through dept room ──
+  const prevStatusRef = useRef<Record<string, string>>({});
+  const [transitAgents, setTransitAgents] = useState<TransitAgent[]>([]);
+
+  useEffect(() => {
+    const now = Date.now();
+    const prev = prevStatusRef.current;
+    const newTransits: TransitAgent[] = [];
+
+    for (const agent of nonOwner) {
+      const prevStatus = prev[agent.id];
+      const currStatus = agent.status;
+
+      // Status changed → start transit
+      if (prevStatus && prevStatus !== currStatus) {
+        const dept = getAgentDept(agent.role);
+        newTransits.push({
+          agent,
+          direction: currStatus === 'working' ? 'to-work' : 'to-break',
+          deptKey: dept.key,
+          startedAt: now,
+        });
+      }
+      prev[agent.id] = currStatus;
+    }
+
+    if (newTransits.length > 0) {
+      setTransitAgents(prev => {
+        // Merge — replace existing transit for same agent
+        const filtered = prev.filter(t => !newTransits.some(n => n.agent.id === t.agent.id));
+        return [...filtered, ...newTransits];
+      });
+    }
+
+    // Cleanup expired transits
+    setTransitAgents(prev => prev.filter(t => now - t.startedAt < TRANSIT_DURATION_MS));
+  }, [agents]);
+
+  // Tick to remove expired transits
+  useEffect(() => {
+    if (transitAgents.length === 0) return;
+    const timer = setTimeout(() => {
+      const now = Date.now();
+      setTransitAgents(prev => prev.filter(t => now - t.startedAt < TRANSIT_DURATION_MS));
+    }, TRANSIT_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [transitAgents]);
+
+  // Agents in transit are hidden from their origin/destination rooms
+  const transitIds = new Set(transitAgents.map(t => t.agent.id));
+
+  // Working = status working AND not in transit
+  const working = nonOwner.filter(a => a.status === 'working' && !transitIds.has(a.id));
+  // Idle = status idle AND not in transit
+  const idle = nonOwner.filter(a => a.status !== 'working' && !transitIds.has(a.id));
 
   return (
     <div style={{display:'flex',flexDirection:'column',gap:0}}>
@@ -482,23 +553,35 @@ export function MultiRoomGrid({
         <Hallway/>
       </>}
 
-      {/* Work Room — all working agents together */}
+      {/* Work Room */}
       <WorkRoom agents={working} npcSize={npcSize} onClickAgent={onClickAgent}
         forceThoughts={forceThoughts} celebrations={celebrations}
         partyMode={partyMode} chatBubbles={chatBubbles}
-        expandedTask={expandedTask} setExpandedTask={setExpandedTask} theme={theme}/>
+        expandedTask={expandedTask} setExpandedTask={setExpandedTask}/>
 
       <Hallway/>
 
-      {/* 6 Fixed dept rooms */}
-      {!isMobile && <DeptRoomGrid/>}
+      {/* Dept Rooms — transit zone */}
+      {!isMobile && (
+        <DeptRooms transitAgents={transitAgents} npcSize={npcSize}
+          onClickAgent={onClickAgent} forceThoughts={forceThoughts}
+          celebrations={celebrations} partyMode={partyMode}/>
+      )}
 
       <div style={{height:8}}/>
 
-      {/* Break Room — all idle agents */}
+      {/* Break Room */}
       <BreakRoom agents={idle} npcSize={npcSize} onClickAgent={onClickAgent}
         forceThoughts={forceThoughts} celebrations={celebrations}
         partyMode={partyMode} chatBubbles={chatBubbles}/>
+
+      {/* Transit animation keyframe */}
+      <style>{`
+        @keyframes transitPulse {
+          0%, 100% { opacity: 0.85; }
+          50% { opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }
