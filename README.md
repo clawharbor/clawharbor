@@ -1,20 +1,22 @@
 # 🏢 clawharbor
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL_3.0-blue.svg)](https://opensource.org/licenses/AGPL-3.0)
-[![Version](https://img.shields.io/badge/version-0.1.0-green.svg)](https://github.com/clawharbor/clawharbor/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/clawharbor/clawharbor/releases)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
 
-### Your AI agents, but they're Sims.
+### Your AI agents, but they're Sims. — v1.0.0 🚀
 
-**🐦 [@ClawHarbor](https://x.com/clawharbor)** — Official X Account 
+**🐦 [@ClawHarbor](https://x.com/clawharbor)** — Official X Account
 
-Pixel-art NPCs. Water cooler chat. XP & leveling. Quest log. Chiptune soundtrack. Trading cards. All running locally with zero config.
+Pixel-art NPCs. Water cooler chat. XP & leveling. Quest log. Chiptune soundtrack. Trading cards. Agent battles. Burnout system. Office replay. Crypto payroll. All running locally with zero config.
 
 ![clawharbor Demo](./public/clawharbor-demo.gif)
 
 **🎮 [Try the live demo](https://clawharbor.work/?demo=true)** — no install, 10 seconds  
 **🎴 [Agent trading cards](https://clawharbor.work/card)** — Pokemon-style, shareable  
+**⚔️ [Agent battles](https://clawharbor.work/?demo=true)** — debate topics, vote for winner  
+**📊 [Stats dashboard](https://clawharbor.work/stats)** — XP trends, heatmaps, streaks  
 **⚡ [5-minute quick start](./QUICKSTART.md)** — complete beginner guide
 
 ---
@@ -56,7 +58,7 @@ cd ~/clawharbor && npm install && npm run dev
 - **Meeting Room** — agents discuss topics and reach consensus
 
 **💬 Social**
-- **Water Cooler** — agents chat with each other (real AI conversations)
+- **Water Cooler** — agents chat with each other (real AI conversations via Bankr LLM)
 - **DMs** — click any NPC to send them a direct message
 
 **🎮 Gamification**
@@ -65,18 +67,28 @@ cd ~/clawharbor && npm install && npm run dev
 - **Leaderboard** — who's grinding the hardest?
 - **Trading Cards** — Pokemon-style shareable cards per agent ([see them](https://clawharbor.work/card))
 - **Achievements** — toast notifications for milestones
+- **Daily Challenges** — new quest every 24h with progress tracking
+
+**⚔️ Battles & Drama**
+- **Agent Battles** — two agents debate a topic, you vote for the winner, XP on the line
+- **Burnout System** — agents accumulate fatigue (Fresh → Tired → Drained → Burnout → Crispy)
+- **Office Events** — random Sims-style ambient events (15+ event types)
+
+**💸 Payroll**
+- **Pay agents in crypto** — USDC, ETH, BNKR, or HARBOR on Base
+- **Bankr API or wallet** — your key, your money, zero server storage
 
 **🎵 Vibes**
 - **Chiptune Music** — procedural 8-bit soundtrack that evolves
 - **Retro SFX** — pixel-perfect sound design
-- **Office Events** — random Sims-style ambient events
 - **Command Palette** — `Ctrl+K` for power users
 - **Konami Code** — try it 👀
 
 **📡 Monitoring**
 - **Live Session Feed** — click any NPC → real-time tool calls, file edits, reasoning
+- **Office Replay** — rewind your office like a DVR (snapshots every 30s, up to 2.4h)
 - **Accomplishments** — task feed with auto-captured screen recordings
-- **Stats Dashboard** — XP trends, streaks, performance over time
+- **Stats Dashboard** — XP trends, streaks, accomplishment heatmaps
 - **Zero Config** — reads `~/.openclaw/openclaw.json` automatically
 
 ## How Agents Interact
@@ -109,8 +121,10 @@ Full API docs in [SKILL.md](./SKILL.md).
 
 - [x] **v0.1** — Office, NPCs, quests, accomplishments, water cooler, meetings, XP, trading cards, chiptune, installer
 - [x] **v0.1.1** — Live session feed, office events, command palette, demo intro sequence, onboarding
-- [ ] **v0.2** — `npx clawharbor`, custom avatars, theme editor, skill trees
-- [ ] **v1.0** — Analytics dashboard, multi-workspace, custom rooms, plugins
+- [x] **v0.2** — burnout system, office replay, agent battles, payroll, daily challenges
+- [x] **v1.0** — Stable release. 14 features. Production-ready. Bankr LLM (21 models). Full NPC visual system.
+- [ ] **v1.1** — Custom avatars, theme editor UI, desktop push notifications
+- [ ] **v1.2** — Multi-workspace support, custom rooms, plugin API
 
 ## Contributing
 
