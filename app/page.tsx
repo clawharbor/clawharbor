@@ -1604,8 +1604,7 @@ export default function HomePage() {
         gap: roomGap,
         maxWidth: isMobile ? '100%' : 1400,
         margin: '0 auto',
-        height: isMobile ? 'auto' : 'calc(100vh - 56px)',
-        overflow: 'hidden',
+        overflow: 'visible',
       }}>
         {/* LEFT COLUMN */}
         <div style={{
@@ -1613,8 +1612,7 @@ export default function HomePage() {
           flexDirection: 'column',
           gap: roomGap,
           minHeight: 0,
-          overflow: isMobile ? 'visible' : 'auto',
-          paddingRight: 4,
+          overflow: 'visible',
         }}>
           {/* 🏢 MULTI-ROOM GRID — claw-empire style department rooms */}
           <MultiRoomGrid
@@ -1919,9 +1917,11 @@ export default function HomePage() {
           display: 'flex',
           flexDirection: 'column',
           gap: roomGap,
-          height: isMobile ? 'auto' : '100%',
-          overflow: isMobile ? 'visible' : 'hidden',
-          maxHeight: isMobile ? '400px' : undefined,
+          height: isMobile ? 'auto' : 'calc(100vh - 72px)',
+          overflow: isMobile ? 'visible' : 'auto',
+          position: isMobile ? 'relative' : 'sticky',
+          top: isMobile ? undefined : 56,
+          alignSelf: 'flex-start',
         }}>
           {/* 📼 OFFICE REPLAY */}
           <OfficeReplayPlayer snapshots={snapshots} isRecording={isRecording}
