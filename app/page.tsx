@@ -1678,6 +1678,18 @@ export default function HomePage() {
             onStart={startRecording} onStop={stopRecording} onClear={clearRecording}
             theme={{ text: theme.text, textDim: theme.textDim, bgSecondary: theme.bgSecondary, border: theme.border }} />
 
+          {/* ⚔️ BATTLE BUTTON */}
+          {agents.length >= 2 && (
+            <BattleButton agents={agents} onStartBattle={randomBattle}
+              theme={{ text: theme.text, border: theme.border }} />
+          )}
+
+          {/* 💰 PAY AGENT */}
+          {agents.length >= 1 && (
+            <PayAgentButton agents={agents}
+              theme={{ text: theme.text, border: theme.border }} />
+          )}
+
           <div data-tour="water-cooler" style={{
             background: theme.bgSecondary,
             border: '2px solid #44320a',
@@ -1895,18 +1907,6 @@ export default function HomePage() {
         {/* 🔥 BURNOUT ALERTS */}
         <BurnoutPanel burnouts={burnouts} agents={agents} onGiveBreak={giveBreak}
           theme={{ text: theme.text, textDim: theme.textDim, border: theme.border }} />
-
-        {/* ⚔️ BATTLE BUTTON */}
-        {agents.length >= 2 && (
-          <BattleButton agents={agents} onStartBattle={randomBattle}
-            theme={{ text: theme.text, border: theme.border }} />
-        )}
-
-        {/* 💰 PAY AGENT */}
-        {agents.length >= 1 && (
-          <PayAgentButton agents={agents}
-            theme={{ text: theme.text, border: theme.border }} />
-        )}
 
         {/* ACCOMPLISHMENTS — full width */}
         <div data-tour="accomplishments" style={{
