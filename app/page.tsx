@@ -1093,8 +1093,9 @@ export default function HomePage() {
 
   return (
     <div style={{
-      height: '100vh',
-      overflow: 'hidden',
+      minHeight: '100vh',
+      overflowX: 'hidden',
+      overflowY: 'auto',
       background: theme.bg,
       color: theme.text,
       fontFamily: 'system-ui',
