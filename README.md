@@ -119,12 +119,12 @@ Full API docs in [SKILL.md](./SKILL.md).
 
 ## Roadmap
 
-- [x] **v0.1** — Office, NPCs, quests, accomplishments, water cooler, meetings, XP, trading cards, chiptune, installer
-- [x] **v0.1.1** — Live session feed, office events, command palette, demo intro sequence, onboarding
-- [x] **v0.2** — burnout system, office replay, agent battles, payroll, daily challenges
-- [x] **v1.0** — Stable release. 14 features. Production-ready. Bankr LLM (21 models). Full NPC visual system.
-- [ ] **v1.1** — Custom avatars, theme editor UI, desktop push notifications
-- [ ] **v1.2** — Multi-workspace support, custom rooms, plugin API
+- [x] **v0.1.0** — Office, NPCs, quests, accomplishments, water cooler, meetings, XP, trading cards, chiptune, installer
+- [x] **v0.2.0** — Live session feed, office events, command palette, demo intro sequence, onboarding
+- [x] **v0.3.0** — burnout system, office replay, agent battles, payroll, daily challenges
+- [x] **v1.0.0** — Stable release. 14 features. Production-ready. Bankr LLM (21 models). Full NPC visual system.
+- [ ] **v1.1.0** — Custom avatars, theme editor UI, desktop push notifications
+- [ ] **v1.2.0** — Multi-workspace support, custom rooms, plugin API
 
 ## Contributing
 
