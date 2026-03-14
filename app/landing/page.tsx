@@ -391,7 +391,7 @@ export default function LandingPage() {
         }}>
           {[
             { value: '14', label: 'Features shipped' },
-            { value: '21', label: 'LLM models via Bankr' },
+            { value: '23', label: 'LLM models via Bankr' },
             { value: '0', label: 'Config required' },
             { value: '100%', label: 'Local & private' },
             { value: '10s', label: 'To try the demo' },
