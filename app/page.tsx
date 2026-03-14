@@ -1605,7 +1605,7 @@ export default function HomePage() {
         maxWidth: isMobile ? '100%' : 1400,
         margin: '0 auto',
         height: isMobile ? 'auto' : 'calc(100vh - 56px)',
-        overflow: isMobile ? 'auto' : 'hidden',
+        overflow: 'hidden',
       }}>
         {/* LEFT COLUMN */}
         <div style={{
@@ -1613,7 +1613,8 @@ export default function HomePage() {
           flexDirection: 'column',
           gap: roomGap,
           minHeight: 0,
-          overflow: isMobile ? 'visible' : 'hidden',
+          overflow: isMobile ? 'visible' : 'auto',
+          paddingRight: 4,
         }}>
           {/* 🏢 MULTI-ROOM GRID — claw-empire style department rooms */}
           <MultiRoomGrid
