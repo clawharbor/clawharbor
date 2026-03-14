@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 export default function LandingPage() {
   const [stars, setStars] = useState<number | null>(null);
   const [darkMode, setDarkMode] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     fetch('https://api.github.com/repos/clawharbor/clawharbor')
@@ -21,6 +22,12 @@ export default function LandingPage() {
     if (savedDarkMode === 'false') {
       setDarkMode(false);
     }
+
+    // Detect mobile
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   // Theme colors
@@ -62,6 +69,7 @@ export default function LandingPage() {
       background: theme.bg,
       color: theme.text,
       fontFamily: 'system-ui',
+      overflowX: 'hidden',
     }}>
       <link
         href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
@@ -98,13 +106,13 @@ export default function LandingPage() {
       <div style={{
         maxWidth: 1200,
         margin: '0 auto',
-        padding: '80px 20px',
+        padding: isMobile ? '40px 16px' : '80px 20px',
         textAlign: 'center',
       }}>
         {/* Logo */}
         <div style={{
-          fontSize: 64,
-          marginBottom: 30,
+          fontSize: isMobile ? 40 : 64,
+          marginBottom: isMobile ? 16 : 30,
           animation: 'float 3s ease-in-out infinite',
         }}>
           🏢
@@ -113,8 +121,8 @@ export default function LandingPage() {
         {/* Headline */}
         <h1 style={{
           fontFamily: '"Press Start 2P", monospace',
-          fontSize: 48,
-          marginBottom: 24,
+          fontSize: isMobile ? 22 : 48,
+          marginBottom: isMobile ? 16 : 24,
           background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
@@ -145,7 +153,7 @@ export default function LandingPage() {
 
         {/* Subheadline */}
         <p style={{
-          fontSize: 20,
+          fontSize: isMobile ? 15 : 20,
           color: theme.textMuted,
           marginBottom: 40,
           lineHeight: 1.6,
@@ -159,10 +167,12 @@ export default function LandingPage() {
         {/* CTA Buttons */}
         <div style={{
           display: 'flex',
-          gap: 16,
+          gap: 12,
           justifyContent: 'center',
           flexWrap: 'wrap',
-          marginBottom: 60,
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: 'center',
+          marginBottom: isMobile ? 32 : 60,
         }}>
           <a
             href="/demo"
@@ -174,7 +184,7 @@ export default function LandingPage() {
               textDecoration: 'none',
               borderRadius: 12,
               fontWeight: 700,
-              fontSize: 16,
+              fontSize: isMobile ? 14 : 16,
               boxShadow: '0 8px 24px rgba(139,92,246,0.3)',
               transition: 'transform 0.2s',
             }}
@@ -211,15 +221,18 @@ export default function LandingPage() {
             alignItems: 'center',
             gap: 10,
             marginTop: 24,
-            padding: '10px 20px',
+            padding: '10px 16px',
             background: theme.cardBg,
             border: `1px solid ${theme.cardBorder}`,
             borderRadius: 8,
             fontFamily: 'monospace',
-            fontSize: 13,
+            fontSize: isMobile ? 10 : 13,
             color: theme.successMuted,
             cursor: 'pointer',
             transition: 'border-color 0.2s',
+            overflowX: 'auto',
+            wordBreak: 'break-all',
+            maxWidth: '100%',
           }}
           onMouseEnter={(e) => e.currentTarget.style.borderColor = theme.accent}
           onMouseLeave={(e) => e.currentTarget.style.borderColor = theme.cardBorder}
@@ -279,7 +292,8 @@ export default function LandingPage() {
           display: 'flex',
           justifyContent: 'center',
           flexWrap: 'wrap',
-          gap: 40,
+          gap: isMobile ? 20 : 40,
+          flexWrap: 'wrap',
         }}>
           {[
             { value: '14', label: 'Features shipped' },
@@ -314,11 +328,11 @@ export default function LandingPage() {
       <div style={{
         maxWidth: 1200,
         margin: '0 auto',
-        padding: '80px 20px',
+        padding: isMobile ? '40px 16px' : '80px 20px',
       }}>
         <h2 style={{
           fontFamily: '"Press Start 2P", monospace',
-          fontSize: 24,
+          fontSize: isMobile ? 14 : 24,
           textAlign: 'center',
           marginBottom: 16,
           color: theme.text,
@@ -491,7 +505,7 @@ export default function LandingPage() {
         background: 'rgba(16,185,129,0.08)',
         borderTop: '3px solid rgba(16,185,129,0.3)',
         borderBottom: '3px solid rgba(16,185,129,0.3)',
-        padding: '60px 20px',
+        padding: isMobile ? '32px 16px' : '60px 20px',
         boxShadow: '0 4px 24px rgba(16,185,129,0.1)',
       }}>
         <div style={{
@@ -650,13 +664,13 @@ export default function LandingPage() {
       <div style={{
         maxWidth: 800,
         margin: '0 auto',
-        padding: '80px 20px',
+        padding: isMobile ? '40px 16px' : '80px 20px',
       }}>
         <h2 style={{
           fontFamily: '"Press Start 2P", monospace',
-          fontSize: 24,
+          fontSize: isMobile ? 14 : 24,
           textAlign: 'center',
-          marginBottom: 60,
+          marginBottom: isMobile ? 32 : 60,
           color: theme.text,
         }}>
           HOW IT WORKS
@@ -665,7 +679,8 @@ export default function LandingPage() {
         <div style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: 40,
+          gap: isMobile ? 20 : 40,
+          flexWrap: 'wrap',
         }}>
           {[
             {
@@ -732,10 +747,12 @@ export default function LandingPage() {
                     background: theme.cardBg,
                     border: `1px solid ${theme.cardBorder}`,
                     borderRadius: 8,
-                    padding: 16,
+                    padding: isMobile ? '10px 12px' : 16,
                     fontFamily: 'monospace',
-                    fontSize: 13,
+                    fontSize: isMobile ? 10 : 13,
                     color: theme.successMuted,
+                    overflowX: 'auto',
+                    wordBreak: 'break-all',
                   }}>
                     {item.code}
                   </div>
@@ -750,13 +767,13 @@ export default function LandingPage() {
       <div style={{
         maxWidth: 800,
         margin: '0 auto',
-        padding: '80px 20px 120px',
+        padding: isMobile ? '40px 16px 60px' : '80px 20px 120px',
         textAlign: 'center',
       }}>
         <h2 style={{
           fontFamily: '"Press Start 2P", monospace',
-          fontSize: 32,
-          marginBottom: 24,
+          fontSize: isMobile ? 18 : 32,
+          marginBottom: isMobile ? 16 : 24,
           color: theme.text,
           lineHeight: 1.4,
         }}>
@@ -776,9 +793,11 @@ export default function LandingPage() {
         </p>
         <div style={{
           display: 'flex',
-          gap: 16,
+          gap: 12,
           justifyContent: 'center',
           flexWrap: 'wrap',
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: 'center',
         }}>
           <a
             href="/demo"
