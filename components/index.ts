@@ -3,6 +3,8 @@ export * from './types';
 export * from './utils';
 export { NPC } from './NPC';
 export { Room } from './Room';
+export { MultiRoomGrid } from './MultiRoomGrid';
+export type { MultiRoomGridProps } from './MultiRoomGrid';
 export { AgentPanel } from './AgentPanel';
 export { SettingsPanel } from './SettingsPanel';
 export { CooldownTimer, linkifyFiles, Stat } from './CooldownTimer';
