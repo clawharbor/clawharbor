@@ -125,7 +125,7 @@ export function BootSequence({ onComplete }: BootSequenceProps) {
             letterSpacing: 1,
           }}
         >
-          v0.3.0 BETA
+          v1.0.0 BETA
         </div>
 
         {/* Progress bar */}
