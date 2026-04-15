@@ -127,7 +127,6 @@ const SHOWCASE_AGENTS = [
   { name: 'Forge',  mood: 'good'  as Mood, status: 'working' as Status },
   { name: 'Nova',   mood: 'okay'  as Mood, status: 'idle'    as Status },
   { name: 'Glitch', mood: 'stressed' as Mood, status: 'working' as Status },
-  { name: 'Byte',   mood: 'great' as Mood, status: 'idle'    as Status },
 ];
 
 // ── Avatar Card ──
