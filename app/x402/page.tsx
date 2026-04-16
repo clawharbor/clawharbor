@@ -244,7 +244,7 @@ export default function X402Page() {
             x402 Cloud Service — Live on Base
           </div>
           <h1 style={{ fontFamily: pixel, fontSize: 'clamp(12px, 2.5vw, 20px)', lineHeight: 1.8, color: '#e2e8f0', margin: 0 }}>
-            <span style={{ color: '#6366f1', textShadow: '0 0 20px rgba(99,102,241,0.35)' }}>generate-agent-avatar</span>
+            <span style={{ color: '#6366f1', textShadow: '0 0 20px rgba(99,102,241,0.35)' }}>Generate Agent Avatar</span>
           </h1>
           <h1 style={{ fontFamily: pixel, fontSize: 'clamp(12px, 2.5vw, 20px)', lineHeight: 1.8, color: '#e2e8f0', margin: '8px 0' }}>PIXEL-ART NPC AVATARS</h1>
           <h1 style={{ fontFamily: pixel, fontSize: 'clamp(12px, 2.5vw, 20px)', lineHeight: 1.8, color: '#e2e8f0', margin: '0 0 8px' }}>FOR YOUR AI AGENTS</h1>
@@ -252,14 +252,12 @@ export default function X402Page() {
             Drop-in SVG avatar generator for ClawHarbor. Same hair styles, skin tones, accessories & plumbob diamond as your in-office NPCs — deterministic from agent name. Pay $0.01 USDC per call via x402.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 48 }}>
-            <a href="https://www.clawharbor.work/demo" style={{ fontFamily: mono, fontSize: 12, fontWeight: 700, padding: '12px 24px', borderRadius: 6, background: '#6366f1', color: 'white', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>🎮 Try the Demo</a>
-            <a href="https://docs.bankr.bot/x402-cloud/overview" target="_blank" rel="noreferrer" style={{ fontFamily: mono, fontSize: 12, fontWeight: 700, padding: '12px 24px', borderRadius: 6, background: 'transparent', color: '#e2e8f0', border: '1px solid #1e3a5f', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>📦 Deploy Yours</a>
-            <a href="https://www.clawharbor.work" target="_blank" rel="noreferrer" style={{ fontFamily: mono, fontSize: 12, fontWeight: 700, padding: '12px 24px', borderRadius: 6, background: 'transparent', color: '#e2e8f0', border: '1px solid #1e3a5f', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>🏢 ClawHarbor</a>
-          </div>
+            <a href="https://x402.bankr.bot/0xd03a55ed9b93202b44c507f6d4514a76443880c2/generate-agent-avatar" style={{ fontFamily: mono, fontSize: 12, fontWeight: 700, padding: '12px 24px', borderRadius: 6, background: '#6366f1', color: 'white', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>https://x402.bankr.bot/0xd03a55ed9b93202b44c507f6d4514a76443880c2/generate-agent-avatar</a>
+                     </div>
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8, padding: '10px 18px' }}>
               <span style={{ fontFamily: pixel, fontSize: 14, color: '#22c55e', textShadow: '0 0 16px rgba(34,197,94,0.3)' }}>$0.01</span>
-              <span style={{ fontSize: 11, color: '#64748b' }}>USDC per request · Base network · via x402</span>
+              <span style={{ fontSize: 11, color: '#64748b' }}>USDC per request · Base network · via x402 - Bankr x402 Cloud</span>
             </div>
           </div>
         </section>
@@ -494,7 +492,6 @@ export default function X402Page() {
             ))}
           </div>
           <div>Made for <a href="https://www.clawharbor.work" target="_blank" rel="noreferrer" style={{ color: '#64748b' }}>ClawHarbor</a> × <a href="https://docs.bankr.bot/x402-cloud/overview" target="_blank" rel="noreferrer" style={{ color: '#64748b' }}>Bankr x402 Cloud</a></div>
-          <div style={{ marginTop: 8, color: '#334155' }}>Open Source · AGPL-3.0 · generate-agent-avatar v1.0</div>
         </footer>
 
       </div>
