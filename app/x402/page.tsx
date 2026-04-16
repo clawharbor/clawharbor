@@ -241,7 +241,7 @@ export default function X402Page() {
         <section style={{ textAlign: 'center', padding: '80px 32px 60px', maxWidth: 900, margin: '0 auto' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)', borderRadius: 20, padding: '6px 16px', fontSize: 11, color: '#a5b4fc', marginBottom: 32 }}>
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
-            x402 Cloud Service — Live on Base
+            HARBOR - Bankr x402 Cloud
           </div>
           <h1 style={{ fontFamily: pixel, fontSize: 'clamp(12px, 2.5vw, 20px)', lineHeight: 1.8, color: '#e2e8f0', margin: 0 }}>
             <span style={{ color: '#6366f1', textShadow: '0 0 20px rgba(99,102,241,0.35)' }}>Generate Agent Avatar</span>
