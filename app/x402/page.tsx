@@ -244,10 +244,10 @@ export default function X402Page() {
             HARBOR - Bankr x402 Cloud
           </div>
           <h1 style={{ fontFamily: pixel, fontSize: 'clamp(12px, 2.5vw, 20px)', lineHeight: 1.8, color: '#e2e8f0', margin: 0 }}>
-            <span style={{ color: '#6366f1', textShadow: '0 0 20px rgba(99,102,241,0.35)' }}>Generate Agent Avatar</span>
+            <span style={{ color: '#6366f1', textShadow: '0 0 20px rgba(99,102,241,0.35)' }}>GENERATE AGENT AVATAR</span>
           </h1>
-          <h1 style={{ fontFamily: pixel, fontSize: 'clamp(12px, 2.5vw, 20px)', lineHeight: 1.8, color: '#e2e8f0', margin: '8px 0' }}>PIXEL-ART NPC AVATARS</h1>
-          <h1 style={{ fontFamily: pixel, fontSize: 'clamp(12px, 2.5vw, 20px)', lineHeight: 1.8, color: '#e2e8f0', margin: '0 0 8px' }}>FOR YOUR AI AGENTS</h1>
+          <h1 style={{ fontFamily: pixel, fontSize: 'clamp(12px, 2.5vw, 20px)', lineHeight: 1.8, color: '#e2e8f0', margin: '8px 0' }}>via x402</h1>
+       
           <p style={{ fontSize: 13, color: '#64748b', maxWidth: 560, margin: '16px auto 40px', lineHeight: 1.8 }}>
             Drop-in SVG avatar generator for ClawHarbor. Same hair styles, skin tones, accessories & plumbob diamond as your in-office NPCs — deterministic from agent name. Pay $0.01 USDC per call via x402.
           </p>
@@ -417,15 +417,7 @@ export default function X402Page() {
               <div><span style={{ color: '#60a5fa' }}>const</span> svg = <span style={{ color: '#c4b5fd' }}>await</span> res.text();</div>
             </Terminal>
           )}
-          {activeTab === 'HTML' && (
-            <Terminal title="drop into any page">
-              <div style={{ color: '#64748b' }}>{/* Direct img tag — paid per load */}</div>
-              <div><span style={{ color: '#60a5fa' }}>&lt;img</span> <span style={{ color: '#eab308' }}>src=</span><span style={{ color: '#22c55e' }}>&quot;https://x402.bankr.bot/0xd03a55ed9b93202b44c507f6d4514a76443880c2/generate-agent-avatar?name=Cipher&amp;mood=great&quot;</span> <span style={{ color: '#60a5fa' }}>/&gt;</span></div>
-              <br />
-              <div style={{ color: '#64748b' }}>{/* Or save SVG file + reference locally */}</div>
-              <div><span style={{ color: '#60a5fa' }}>&lt;img</span> <span style={{ color: '#eab308' }}>src=</span><span style={{ color: '#22c55e' }}>&quot;/avatars/Cipher.svg&quot;</span> <span style={{ color: '#60a5fa' }}>/&gt;</span></div>
-            </Terminal>
-          )}
+         
         </section>
 
         {/* API REFERENCE */}
