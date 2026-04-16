@@ -305,7 +305,7 @@ export default function X402Page() {
   ];
 
   // Short display URL for CTA button
-  const CTA_URL = 'https://x402.bankr.bot/0xd03a55.../generate-agent-avatar';
+  const CTA_URL = 'https://x402.bankr.bot/0xd03a55ed9b93202b44c507f6d4514a76443880c2/generate-agent-avatar';
   const CTA_HREF = 'https://x402.bankr.bot/0xd03a55ed9b93202b44c507f6d4514a76443880c2/generate-agent-avatar';
 
   return (
@@ -724,7 +724,7 @@ export default function X402Page() {
                 width: '100%',
               }}>
                 <span style={{ color: '#64748b' }}>https://x402.bankr.bot/</span>
-                <span style={{ color: '#64748b' }}>0xd03a55.../</span>
+                <span style={{ color: '#64748b' }}>0xd03a55ed9b93202b44c507f6d4514a76443880c2/</span>
                 <span style={{ color: '#64748b' }}>generate-agent-avatar</span>
                 <span style={{ color: '#eab308' }}>?name=</span>
                 <span style={{ color: '#22c55e' }}>{encodeURIComponent(demoName || 'Cipher')}</span>
