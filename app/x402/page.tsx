@@ -262,18 +262,8 @@ export default function X402Page() {
           </div>
         </section>
 
-      {/* AVATAR SHOWCASE */}
-<div
-  style={{
-    display: 'grid',
-    gridTemplateColumns: 'repeat(4, 1fr)',
-    gap: 24,
-    maxWidth: 640,
-    margin: '0 auto 80px',
-    padding: '0 32px',
-    justifyItems: 'center',
-  }}
->
+        {/* AVATAR SHOWCASE */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap', margin: '0 auto 80px', maxWidth: 700, padding: '0 32px' }}>
           {SHOWCASE_AGENTS.map(({ name, mood, status }) => (
             <AvatarCard key={name} name={name} mood={mood} status={status} onClick={() => {
               setDemoName(name); setDemoMood(mood); setDemoStatus(status);
