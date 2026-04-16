@@ -134,14 +134,33 @@ function AvatarCard({ name, mood, status, onClick }: { name: string; mood: Mood;
   const traits = getNpcTraits(name);
   const svg = buildSVG(name, mood, status, traits, 8);
   return (
-    <div onClick={onClick} style={{
-      background: '#0f172a', border: '1px solid #1e3a5f', borderRadius: 10,
-      padding: '16px 12px 12px', display: 'flex', flexDirection: 'column',
-      alignItems: 'center', gap: 10, cursor: 'pointer', width: 110,
-      transition: 'all 0.25s', position: 'relative', overflow: 'hidden',
-    }}
-      onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = '#6366f1'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-4px)'; }}
-      onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = '#1e3a5f'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'; }}
+    <div
+      onClick={onClick}
+      style={{
+        background: '#0f172a',
+        border: '1px solid #1e3a5f',
+        borderRadius: 10,
+        padding: '16px 12px 12px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 10,
+        cursor: 'pointer',
+        flex: '1 1 100px',
+        minWidth: 90,
+        maxWidth: 130,
+        transition: 'all 0.25s',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLDivElement).style.borderColor = '#6366f1';
+        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-4px)';
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLDivElement).style.borderColor = '#1e3a5f';
+        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
+      }}
     >
       <div dangerouslySetInnerHTML={{ __html: svg }} style={{ width: 70 }} />
       <div style={{ fontFamily: '"Press Start 2P", monospace', fontSize: 7, color: '#e2e8f0', textAlign: 'center' }}>{name}</div>
@@ -153,14 +172,37 @@ function AvatarCard({ name, mood, status, onClick }: { name: string; mood: Mood;
 // ── Terminal Block ──
 function Terminal({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: '#060d18', border: '1px solid #1e3a5f', borderRadius: 10, overflow: 'hidden', fontSize: 12, marginBottom: 16 }}>
-      <div style={{ background: '#1e293b', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid #1e3a5f' }}>
-        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444' }} />
-        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#eab308' }} />
-        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#22c55e' }} />
+    <div style={{
+      background: '#060d18',
+      border: '1px solid #1e3a5f',
+      borderRadius: 10,
+      overflow: 'hidden',
+      fontSize: 12,
+      marginBottom: 16,
+    }}>
+      <div style={{
+        background: '#1e293b',
+        padding: '10px 14px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        borderBottom: '1px solid #1e3a5f',
+      }}>
+        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444', flexShrink: 0 }} />
+        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#eab308', flexShrink: 0 }} />
+        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#22c55e', flexShrink: 0 }} />
         <span style={{ fontSize: 11, color: '#64748b', marginLeft: 8 }}>{title}</span>
       </div>
-      <div style={{ padding: 20, lineHeight: 1.9, fontFamily: 'monospace' }}>{children}</div>
+      <div style={{
+        padding: 20,
+        lineHeight: 1.9,
+        fontFamily: 'monospace',
+        overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch',
+        wordBreak: 'break-word',
+      }}>
+        {children}
+      </div>
     </div>
   );
 }
@@ -168,6 +210,26 @@ function Terminal({ title, children }: { title: string; children: React.ReactNod
 // ── Tabs ──
 const TABS = ['curl', 'bankr cli', 'TypeScript', 'HTML'] as const;
 type Tab = typeof TABS[number];
+
+// ── Global responsive styles injected once ──
+const GLOBAL_CSS = `
+  * { box-sizing: border-box; }
+  @media (max-width: 600px) {
+    .stats-row { flex-direction: column !important; border-radius: 10px !important; }
+    .stats-row > div { border-right: none !important; border-bottom: 1px solid #1e3a5f; }
+    .stats-row > div:last-child { border-bottom: none; }
+    .demo-grid { grid-template-columns: 1fr !important; }
+    .nav-links { display: none !important; }
+    .hero-cta-btn { font-size: 10px !important; word-break: break-all; white-space: normal !important; text-align: center; }
+    .api-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .footer-links { flex-wrap: wrap !important; gap: 12px !important; }
+    .tab-bar { overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+    .section-pad { padding: 0 16px !important; }
+  }
+  @media (max-width: 420px) {
+    .showcase-row { justify-content: center !important; }
+  }
+`;
 
 export default function X402Page() {
   const [activeTab, setActiveTab] = useState<Tab>('curl');
@@ -177,6 +239,7 @@ export default function X402Page() {
   const [demoSize, setDemoSize] = useState(3);
   const [avatarSvg, setAvatarSvg] = useState('');
   const [showDeploy, setShowDeploy] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Google Fonts
   useEffect(() => {
@@ -184,6 +247,12 @@ export default function X402Page() {
     link.rel = 'stylesheet';
     link.href = 'https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;700&display=swap';
     document.head.appendChild(link);
+
+    // Inject global responsive CSS
+    const style = document.createElement('style');
+    style.textContent = GLOBAL_CSS;
+    document.head.appendChild(style);
+    return () => { document.head.removeChild(style); };
   }, []);
 
   const generateAvatar = () => {
@@ -203,67 +272,301 @@ export default function X402Page() {
   const pc = moodColors[demoMood];
 
   const sectionLabel = (text: string) => (
-    <div style={{ fontFamily: pixel, fontSize: 9, color: '#64748b', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
+    <div style={{
+      fontFamily: pixel,
+      fontSize: 9,
+      color: '#64748b',
+      marginBottom: 20,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 12,
+    }}>
       {text}
       <div style={{ flex: 1, height: 1, background: '#1e3a5f' }} />
     </div>
   );
 
   const inputStyle: React.CSSProperties = {
-    width: '100%', background: '#0a0f1a', border: '1px solid #1e3a5f', borderRadius: 6,
-    color: '#e2e8f0', fontFamily: mono, fontSize: 12, padding: '8px 12px', outline: 'none',
+    width: '100%',
+    background: '#0a0f1a',
+    border: '1px solid #1e3a5f',
+    borderRadius: 6,
+    color: '#e2e8f0',
+    fontFamily: mono,
+    fontSize: 12,
+    padding: '8px 12px',
+    outline: 'none',
   };
 
+  const NAV_LINKS = [
+    ['x402 Docs', 'https://docs.bankr.bot/x402-cloud/overview'],
+    ['GitHub', 'https://github.com/clawharbor/clawharbor'],
+    ['X / Twitter', 'https://x.com/clawharbor'],
+  ];
+
+  // Short display URL for CTA button
+  const CTA_URL = 'https://x402.bankr.bot/0xd03a55.../generate-agent-avatar';
+  const CTA_HREF = 'https://x402.bankr.bot/0xd03a55ed9b93202b44c507f6d4514a76443880c2/generate-agent-avatar';
+
   return (
-    <div style={{ background: '#0a0f1a', color: '#e2e8f0', fontFamily: mono, minHeight: '100vh', overflowX: 'hidden', position: 'relative' }}>
+    <div style={{
+      background: '#0a0f1a',
+      color: '#e2e8f0',
+      fontFamily: mono,
+      minHeight: '100vh',
+      overflowX: 'hidden',
+      position: 'relative',
+    }}>
 
       {/* Scanline overlay */}
-      <div style={{ position: 'fixed', inset: 0, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px)', pointerEvents: 'none', zIndex: 1000 }} />
+      <div style={{
+        position: 'fixed', inset: 0,
+        background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px)',
+        pointerEvents: 'none', zIndex: 1000,
+      }} />
       {/* Grid bg */}
-      <div style={{ position: 'fixed', inset: 0, backgroundImage: 'linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px)', backgroundSize: '32px 32px', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{
+        position: 'fixed', inset: 0,
+        backgroundImage: 'linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px)',
+        backgroundSize: '32px 32px',
+        pointerEvents: 'none', zIndex: 0,
+      }} />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
 
         {/* NAV */}
-        <nav style={{ borderBottom: '1px solid #1e3a5f', padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(10,15,26,0.9)', backdropFilter: 'blur(8px)', position: 'sticky', top: 0, zIndex: 100 }}>
-          <a href="https://www.clawharbor.work" style={{ fontFamily: pixel, fontSize: 9, color: '#e2e8f0', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <nav style={{
+          borderBottom: '1px solid #1e3a5f',
+          padding: '14px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          background: 'rgba(10,15,26,0.9)',
+          backdropFilter: 'blur(8px)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 100,
+          gap: 12,
+        }}>
+          {/* Logo */}
+          <a
+            href="https://www.clawharbor.work"
+            style={{
+              fontFamily: pixel,
+              fontSize: 9,
+              color: '#e2e8f0',
+              textDecoration: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              flexShrink: 0,
+            }}
+          >
             🏢 ClawHarbor
-            <span style={{ background: '#6366f1', color: 'white', fontSize: 7, padding: '3px 7px', borderRadius: 3, fontFamily: mono, fontWeight: 700 }}>x402</span>
+            <span style={{
+              background: '#6366f1',
+              color: 'white',
+              fontSize: 7,
+              padding: '3px 7px',
+              borderRadius: 3,
+              fontFamily: mono,
+              fontWeight: 700,
+            }}>x402</span>
           </a>
-          <div style={{ display: 'flex', gap: 20 }}>
-            {[['x402 Docs', 'https://docs.bankr.bot/x402-cloud/overview'], ['GitHub', 'https://github.com/clawharbor/clawharbor'], ['X / Twitter', 'https://x.com/clawharbor']].map(([label, href]) => (
-              <a key={label} href={href} target="_blank" rel="noreferrer" style={{ color: '#64748b', textDecoration: 'none', fontSize: 11 }}>{label}</a>
+
+          {/* Desktop nav links */}
+          <div className="nav-links" style={{ display: 'flex', gap: 20 }}>
+            {NAV_LINKS.map(([label, href]) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                style={{ color: '#64748b', textDecoration: 'none', fontSize: 11 }}
+              >
+                {label}
+              </a>
             ))}
           </div>
+
+          {/* Mobile hamburger */}
+          <button
+            aria-label="Toggle menu"
+            onClick={() => setMobileMenuOpen(o => !o)}
+            style={{
+              display: 'none',
+              background: 'none',
+              border: 'none',
+              color: '#64748b',
+              cursor: 'pointer',
+              fontSize: 18,
+              padding: 4,
+            }}
+            className="hamburger-btn"
+          >
+            {mobileMenuOpen ? '✕' : '☰'}
+          </button>
         </nav>
 
+        {/* Mobile dropdown menu */}
+        {mobileMenuOpen && (
+          <div style={{
+            position: 'sticky',
+            top: 49,
+            zIndex: 99,
+            background: 'rgba(10,15,26,0.97)',
+            borderBottom: '1px solid #1e3a5f',
+            padding: '12px 24px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 12,
+          }}>
+            {NAV_LINKS.map(([label, href]) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                style={{ color: '#64748b', textDecoration: 'none', fontSize: 13 }}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {label}
+              </a>
+            ))}
+          </div>
+        )}
+
         {/* HERO */}
-        <section style={{ textAlign: 'center', padding: '80px 32px 60px', maxWidth: 900, margin: '0 auto' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)', borderRadius: 20, padding: '6px 16px', fontSize: 11, color: '#a5b4fc', marginBottom: 32 }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
+        <section style={{
+          textAlign: 'center',
+          padding: 'clamp(48px, 8vw, 80px) 24px 60px',
+          maxWidth: 900,
+          margin: '0 auto',
+        }}>
+          {/* Badge */}
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            background: 'rgba(99,102,241,0.1)',
+            border: '1px solid rgba(99,102,241,0.3)',
+            borderRadius: 20,
+            padding: '6px 16px',
+            fontSize: 11,
+            color: '#a5b4fc',
+            marginBottom: 32,
+          }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', display: 'inline-block', flexShrink: 0 }} />
             HARBOR - Bankr x402 Cloud
           </div>
-          <h1 style={{ fontFamily: pixel, fontSize: 'clamp(12px, 2.5vw, 20px)', lineHeight: 1.8, color: '#e2e8f0', margin: 0 }}>
-            <span style={{ color: '#6366f1', textShadow: '0 0 20px rgba(99,102,241,0.35)' }}>GENERATE AGENT AVATAR</span>
+
+          {/* Headline */}
+          <h1 style={{
+            fontFamily: pixel,
+            fontSize: 'clamp(12px, 2.5vw, 20px)',
+            lineHeight: 1.8,
+            color: '#e2e8f0',
+            margin: 0,
+          }}>
+            <span style={{ color: '#6366f1', textShadow: '0 0 20px rgba(99,102,241,0.35)' }}>
+              GENERATE AGENT AVATAR
+            </span>
           </h1>
-          <h1 style={{ fontFamily: pixel, fontSize: 'clamp(12px, 2.5vw, 20px)', lineHeight: 1.8, color: '#e2e8f0', margin: '8px 0' }}>via x402</h1>
-       
-          <p style={{ fontSize: 13, color: '#64748b', maxWidth: 560, margin: '16px auto 40px', lineHeight: 1.8 }}>
-            Drop-in SVG avatar generator for ClawHarbor. Same hair styles, skin tones, accessories & plumbob diamond as your in-office NPCs — deterministic from agent name. Pay $0.01 USDC per call via x402.
+          <h1 style={{
+            fontFamily: pixel,
+            fontSize: 'clamp(12px, 2.5vw, 20px)',
+            lineHeight: 1.8,
+            color: '#e2e8f0',
+            margin: '8px 0',
+          }}>
+            via x402
+          </h1>
+
+          {/* Description */}
+          <p style={{
+            fontSize: 13,
+            color: '#64748b',
+            maxWidth: 560,
+            margin: '16px auto 40px',
+            lineHeight: 1.8,
+          }}>
+            Drop-in SVG avatar generator for ClawHarbor. Same hair styles, skin tones, accessories &amp; plumbob diamond as your in-office NPCs — deterministic from agent name. Pay $0.01 USDC per call via x402.
           </p>
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 48 }}>
-            <a href="https://x402.bankr.bot/0xd03a55ed9b93202b44c507f6d4514a76443880c2/generate-agent-avatar" style={{ fontFamily: mono, fontSize: 12, fontWeight: 700, padding: '12px 24px', borderRadius: 6, background: '#6366f1', color: 'white', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>https://x402.bankr.bot/0xd03a55ed9b93202b44c507f6d4514a76443880c2/generate-agent-avatar</a>
-                     </div>
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8, padding: '10px 18px' }}>
-              <span style={{ fontFamily: pixel, fontSize: 14, color: '#22c55e', textShadow: '0 0 16px rgba(34,197,94,0.3)' }}>$0.01</span>
-              <span style={{ fontSize: 11, color: '#64748b' }}>USDC per request · Base network · via x402 - Bankr x402 Cloud</span>
+
+          {/* CTA button — shortened URL displayed, full URL in href */}
+          <div style={{
+            display: 'flex',
+            gap: 12,
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+            marginBottom: 48,
+            padding: '0 8px',
+          }}>
+            <a
+              href={CTA_HREF}
+              className="hero-cta-btn"
+              style={{
+                fontFamily: mono,
+                fontSize: 11,
+                fontWeight: 700,
+                padding: '12px 20px',
+                borderRadius: 6,
+                background: '#6366f1',
+                color: 'white',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                maxWidth: '100%',
+                wordBreak: 'break-all',
+                lineHeight: 1.5,
+              }}
+            >
+              {CTA_URL}
+            </a>
+          </div>
+
+          {/* Price badge */}
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px' }}>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              gap: 8,
+              background: 'rgba(34,197,94,0.1)',
+              border: '1px solid rgba(34,197,94,0.3)',
+              borderRadius: 8,
+              padding: '10px 18px',
+              textAlign: 'center',
+            }}>
+              <span style={{
+                fontFamily: pixel,
+                fontSize: 14,
+                color: '#22c55e',
+                textShadow: '0 0 16px rgba(34,197,94,0.3)',
+                whiteSpace: 'nowrap',
+              }}>$0.01</span>
+              <span style={{ fontSize: 11, color: '#64748b' }}>
+                USDC per request · Base network · via x402 - Bankr x402 Cloud
+              </span>
             </div>
           </div>
         </section>
 
         {/* AVATAR SHOWCASE */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap', margin: '0 auto 80px', maxWidth: 700, padding: '0 32px' }}>
+        <div
+          className="showcase-row"
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: 16,
+            flexWrap: 'wrap',
+            margin: '0 auto 80px',
+            maxWidth: 700,
+            padding: '0 24px',
+          }}
+        >
           {SHOWCASE_AGENTS.map(({ name, mood, status }) => (
             <AvatarCard key={name} name={name} mood={mood} status={status} onClick={() => {
               setDemoName(name); setDemoMood(mood); setDemoStatus(status);
@@ -273,26 +576,87 @@ export default function X402Page() {
         </div>
 
         {/* STATS ROW */}
-        <div style={{ display: 'flex', justifyContent: 'center', margin: '0 auto 80px', maxWidth: 700, border: '1px solid #1e3a5f', borderRadius: 10, overflow: 'hidden' }}>
-          {[['8','Hair Styles'],['5','Accessories'],['8','Skin Tones'],['4','Mood States'],['∞','Unique Combos']].map(([num, label]) => (
-            <div key={label} style={{ flex: 1, textAlign: 'center', padding: '24px 16px', borderRight: '1px solid #1e3a5f' }}>
-              <span style={{ fontFamily: pixel, fontSize: 14, color: '#6366f1', display: 'block', marginBottom: 8, textShadow: '0 0 20px rgba(99,102,241,0.35)' }}>{num}</span>
+        <div
+          className="stats-row"
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            margin: '0 auto 80px',
+            maxWidth: 700,
+            border: '1px solid #1e3a5f',
+            borderRadius: 10,
+            overflow: 'hidden',
+            // On mobile, override to column via CSS class
+          }}
+        >
+          {[
+            ['8', 'Hair Styles'],
+            ['5', 'Accessories'],
+            ['8', 'Skin Tones'],
+            ['4', 'Mood States'],
+            ['∞', 'Unique Combos'],
+          ].map(([num, label], i, arr) => (
+            <div key={label} style={{
+              flex: 1,
+              textAlign: 'center',
+              padding: '24px 12px',
+              borderRight: i < arr.length - 1 ? '1px solid #1e3a5f' : 'none',
+              minWidth: 60,
+            }}>
+              <span style={{
+                fontFamily: pixel,
+                fontSize: 'clamp(10px, 3vw, 14px)',
+                color: '#6366f1',
+                display: 'block',
+                marginBottom: 8,
+                textShadow: '0 0 20px rgba(99,102,241,0.35)',
+              }}>
+                {num}
+              </span>
               <div style={{ fontSize: 10, color: '#64748b', lineHeight: 1.6 }}>{label}</div>
             </div>
           ))}
         </div>
 
         {/* LIVE DEMO */}
-        <section id="demo" style={{ maxWidth: 800, margin: '0 auto 80px', padding: '0 32px' }}>
+        <section
+          id="demo"
+          className="section-pad"
+          style={{ maxWidth: 800, margin: '0 auto 80px', padding: '0 24px' }}
+        >
           {sectionLabel('🎮 LIVE PREVIEW')}
-          <div style={{ background: '#0f172a', border: '1px solid #1e3a5f', borderRadius: 10, padding: 24, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, alignItems: 'start' }}>
-
+          <div
+            className="demo-grid"
+            style={{
+              background: '#0f172a',
+              border: '1px solid #1e3a5f',
+              borderRadius: 10,
+              padding: 24,
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+              gap: 24,
+              alignItems: 'start',
+            }}
+          >
             {/* Controls */}
             <div>
-              <label style={{ display: 'block', fontSize: 10, color: '#64748b', marginBottom: 6, marginTop: 14, textTransform: 'uppercase', letterSpacing: 0.5 }}>Agent Name *</label>
-              <input type="text" value={demoName} maxLength={64} placeholder="e.g. Cipher, Forge, Nova…" onChange={e => setDemoName(e.target.value)} style={inputStyle} />
+              <label style={{
+                display: 'block', fontSize: 10, color: '#64748b',
+                marginBottom: 6, marginTop: 14, textTransform: 'uppercase', letterSpacing: 0.5,
+              }}>Agent Name *</label>
+              <input
+                type="text"
+                value={demoName}
+                maxLength={64}
+                placeholder="e.g. Cipher, Forge, Nova…"
+                onChange={e => setDemoName(e.target.value)}
+                style={inputStyle}
+              />
 
-              <label style={{ display: 'block', fontSize: 10, color: '#64748b', marginBottom: 6, marginTop: 14, textTransform: 'uppercase', letterSpacing: 0.5 }}>Mood</label>
+              <label style={{
+                display: 'block', fontSize: 10, color: '#64748b',
+                marginBottom: 6, marginTop: 14, textTransform: 'uppercase', letterSpacing: 0.5,
+              }}>Mood</label>
               <select value={demoMood} onChange={e => setDemoMood(e.target.value as Mood)} style={inputStyle}>
                 <option value="great">😄 great</option>
                 <option value="good">🙂 good</option>
@@ -300,32 +664,67 @@ export default function X402Page() {
                 <option value="stressed">😰 stressed</option>
               </select>
 
-              <label style={{ display: 'block', fontSize: 10, color: '#64748b', marginBottom: 6, marginTop: 14, textTransform: 'uppercase', letterSpacing: 0.5 }}>Status</label>
+              <label style={{
+                display: 'block', fontSize: 10, color: '#64748b',
+                marginBottom: 6, marginTop: 14, textTransform: 'uppercase', letterSpacing: 0.5,
+              }}>Status</label>
               <select value={demoStatus} onChange={e => setDemoStatus(e.target.value as Status)} style={inputStyle}>
                 <option value="working">⚡ working</option>
                 <option value="idle">💤 idle</option>
               </select>
 
-              <label style={{ display: 'block', fontSize: 10, color: '#64748b', marginBottom: 6, marginTop: 14, textTransform: 'uppercase', letterSpacing: 0.5 }}>Size (1–4)</label>
+              <label style={{
+                display: 'block', fontSize: 10, color: '#64748b',
+                marginBottom: 6, marginTop: 14, textTransform: 'uppercase', letterSpacing: 0.5,
+              }}>Size (1–4)</label>
               <select value={demoSize} onChange={e => setDemoSize(Number(e.target.value))} style={inputStyle}>
                 <option value={2}>2 — small</option>
                 <option value={3}>3 — default</option>
                 <option value={4}>4 — large</option>
               </select>
 
-              <button onClick={generateAvatar} style={{ width: '100%', marginTop: 18, padding: 12, background: '#6366f1', color: 'white', border: 'none', borderRadius: 6, fontFamily: pixel, fontSize: 8, cursor: 'pointer' }}>
+              <button
+                onClick={generateAvatar}
+                style={{
+                  width: '100%', marginTop: 18, padding: 12,
+                  background: '#6366f1', color: 'white', border: 'none',
+                  borderRadius: 6, fontFamily: pixel, fontSize: 8, cursor: 'pointer',
+                }}
+              >
                 ▶ GENERATE AVATAR
               </button>
             </div>
 
             {/* Preview */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-              <div style={{ background: '#060d18', border: '1px solid #1e3a5f', borderRadius: 8, padding: 20, minHeight: 180, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+              <div style={{
+                background: '#060d18',
+                border: '1px solid #1e3a5f',
+                borderRadius: 8,
+                padding: 20,
+                minHeight: 180,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+              }}>
                 <div dangerouslySetInnerHTML={{ __html: avatarSvg }} style={{ maxWidth: 120 }} />
               </div>
-              <div style={{ background: '#0a0f1a', border: '1px solid #1e3a5f', borderRadius: 6, padding: '10px 12px', fontSize: 10, color: '#06b6d4', wordBreak: 'break-all', lineHeight: 1.6, width: '100%' }}>
+
+              {/* Generated URL display */}
+              <div style={{
+                background: '#0a0f1a',
+                border: '1px solid #1e3a5f',
+                borderRadius: 6,
+                padding: '10px 12px',
+                fontSize: 10,
+                color: '#06b6d4',
+                wordBreak: 'break-all',
+                lineHeight: 1.6,
+                width: '100%',
+              }}>
                 <span style={{ color: '#64748b' }}>https://x402.bankr.bot/</span>
-                <span style={{ color: '#64748b' }}>0xd03a55ed9b93202b44c507f6d4514a76443880c2/</span>
+                <span style={{ color: '#64748b' }}>0xd03a55.../</span>
                 <span style={{ color: '#64748b' }}>generate-agent-avatar</span>
                 <span style={{ color: '#eab308' }}>?name=</span>
                 <span style={{ color: '#22c55e' }}>{encodeURIComponent(demoName || 'Cipher')}</span>
@@ -334,8 +733,19 @@ export default function X402Page() {
                 <span style={{ color: '#eab308' }}>&amp;status=</span>
                 <span style={{ color: '#22c55e' }}>{demoStatus}</span>
               </div>
+
               {showDeploy && (
-                <div style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 6, padding: '14px 16px', fontSize: 11, color: '#22c55e', textAlign: 'center', marginTop: 16, lineHeight: 1.8, width: '100%' }}>
+                <div style={{
+                  background: 'rgba(34,197,94,0.1)',
+                  border: '1px solid rgba(34,197,94,0.3)',
+                  borderRadius: 6,
+                  padding: '14px 16px',
+                  fontSize: 11,
+                  color: '#22c55e',
+                  textAlign: 'center',
+                  lineHeight: 1.8,
+                  width: '100%',
+                }}>
                   ✔ Avatar generated — deploy to serve live!<br />
                   <code style={{ fontSize: 10, color: '#06b6d4' }}>bankr x402 deploy</code>
                 </div>
@@ -345,7 +755,10 @@ export default function X402Page() {
         </section>
 
         {/* DEPLOY */}
-        <section style={{ maxWidth: 800, margin: '0 auto 80px', padding: '0 32px' }}>
+        <section
+          className="section-pad"
+          style={{ maxWidth: 800, margin: '0 auto 80px', padding: '0 24px' }}
+        >
           {sectionLabel('🚀 DEPLOY IN ONE COMMAND')}
           <Terminal title="bash — x402-agent-avatar">
             <div style={{ color: '#64748b' }}># Install Bankr CLI</div>
@@ -355,23 +768,51 @@ export default function X402Page() {
             <div style={{ color: '#60a5fa' }}>$ bankr login</div>
             <br />
             <div style={{ color: '#64748b' }}># Call the service</div>
-            <div style={{ color: '#60a5fa' }}>$ bankr x402 call "https://x402.bankr.bot/0xd03a55ed9b93202b44c507f6d4514a76443880c2/generate-agent-avatar?name=Cipher&mood=great"</div>
+            <div style={{ color: '#60a5fa', wordBreak: 'break-all' }}>$ bankr x402 call &quot;https://x402.bankr.bot/0xd03a55ed9b93202b44c507f6d4514a76443880c2/generate-agent-avatar?name=Cipher&amp;mood=great&quot;</div>
             <br />
             <div style={{ paddingLeft: 16, color: '#22c55e' }}>✔ Call 1 service(s)</div>
             <br />
             <div style={{ paddingLeft: 16, color: '#64748b' }}>  Service: <span style={{ color: '#06b6d4' }}>generate-agent-avatar</span></div>
-            <div style={{ paddingLeft: 16, color: '#64748b' }}>  URL:     <span style={{ color: '#60a5fa' }}>https://x402.bankr.bot/0xd03a55ed9b93202b44c507f6d4514a76443880c2/generate-agent-avatar</span></div>
-            <div style={{ paddingLeft: 16, color: '#64748b' }}>  Price:   <span style={{ color: '#22c55e' }}>$0.01 USDC/req</span></div>
+            <div style={{ paddingLeft: 16, color: '#64748b', wordBreak: 'break-all' }}>  URL: <span style={{ color: '#60a5fa' }}>https://x402.bankr.bot/0xd03a55ed9b93202b44c507f6d4514a76443880c2/...</span></div>
+            <div style={{ paddingLeft: 16, color: '#64748b' }}>  Price: <span style={{ color: '#22c55e' }}>$0.01 USDC/req</span></div>
             <div style={{ paddingLeft: 16, color: '#64748b' }}>  Network: <span style={{ color: '#eab308' }}>base</span></div>
           </Terminal>
         </section>
 
         {/* INTEGRATION TABS */}
-        <section style={{ maxWidth: 800, margin: '0 auto 80px', padding: '0 32px' }}>
+        <section
+          className="section-pad"
+          style={{ maxWidth: 800, margin: '0 auto 80px', padding: '0 24px' }}
+        >
           {sectionLabel('🔗 INTEGRATION')}
-          <div style={{ display: 'flex', borderBottom: '1px solid #1e3a5f', marginBottom: 0 }}>
+
+          {/* Tab bar — scrollable on mobile */}
+          <div
+            className="tab-bar"
+            style={{
+              display: 'flex',
+              borderBottom: '1px solid #1e3a5f',
+              marginBottom: 0,
+              overflowX: 'auto',
+              WebkitOverflowScrolling: 'touch',
+            }}
+          >
             {TABS.map(tab => (
-              <div key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '10px 18px', fontSize: 11, color: activeTab === tab ? '#6366f1' : '#64748b', cursor: 'pointer', borderBottom: activeTab === tab ? '2px solid #6366f1' : '2px solid transparent', marginBottom: -1, fontFamily: mono }}>
+              <div
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                style={{
+                  padding: '10px 18px',
+                  fontSize: 11,
+                  color: activeTab === tab ? '#6366f1' : '#64748b',
+                  cursor: 'pointer',
+                  borderBottom: activeTab === tab ? '2px solid #6366f1' : '2px solid transparent',
+                  marginBottom: -1,
+                  fontFamily: mono,
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+              >
                 {tab}
               </div>
             ))}
@@ -380,19 +821,20 @@ export default function X402Page() {
           {activeTab === 'curl' && (
             <>
               <Terminal title="without payment → 402">
-                <div style={{ color: '#60a5fa' }}>$ curl -i &quot;https://x402.bankr.bot/0xd03a55ed9b93202b44c507f6d4514a76443880c2/generate-agent-avatar?name=Cipher&quot;</div>
+                <div style={{ color: '#60a5fa', wordBreak: 'break-all' }}>$ curl -i &quot;https://x402.bankr.bot/0xd03a55ed9b93202b44c507f6d4514a76443880c2/generate-agent-avatar?name=Cipher&quot;</div>
                 <div style={{ paddingLeft: 16, color: '#ef4444' }}>→ HTTP/1.1 402 Payment Required</div>
               </Terminal>
               <Terminal title="direct call">
-                <div style={{ color: '#60a5fa' }}>$ bankr x402 call &quot;https://x402.bankr.bot/0xd03a55ed9b93202b44c507f6d4514a76443880c2/generate-agent-avatar?name=Cipher&amp;mood=great&amp;status=working&quot;</div>
+                <div style={{ color: '#60a5fa', wordBreak: 'break-all' }}>$ bankr x402 call &quot;https://x402.bankr.bot/0xd03a55ed9b93202b44c507f6d4514a76443880c2/generate-agent-avatar?name=Cipher&amp;mood=great&amp;status=working&quot;</div>
                 <div style={{ paddingLeft: 16, color: '#22c55e' }}>✔ Paid $0.01 USDC — receiving SVG...</div>
               </Terminal>
             </>
           )}
+
           {activeTab === 'bankr cli' && (
             <Terminal title="interactive — auto-payment">
               <div style={{ color: '#64748b' }}># CLI reads schema, prompts for each field, pays automatically</div>
-              <div style={{ color: '#60a5fa' }}>$ bankr x402 call &quot;https://x402.bankr.bot/0xd03a55ed9b93202b44c507f6d4514a76443880c2/generate-agent-avatar&quot; -i</div>
+              <div style={{ color: '#60a5fa', wordBreak: 'break-all' }}>$ bankr x402 call &quot;https://x402.bankr.bot/0xd03a55ed9b93202b44c507f6d4514a76443880c2/generate-agent-avatar&quot; -i</div>
               <br />
               <div style={{ paddingLeft: 16, color: '#eab308' }}>? name:   <span style={{ color: '#22c55e' }}>Cipher</span></div>
               <div style={{ paddingLeft: 16, color: '#eab308' }}>? mood:   <span style={{ color: '#22c55e' }}>great</span></div>
@@ -401,64 +843,99 @@ export default function X402Page() {
               <div style={{ paddingLeft: 16, color: '#22c55e' }}>✔ Paid $0.01 USDC — SVG saved!</div>
             </Terminal>
           )}
+
           {activeTab === 'TypeScript' && (
             <Terminal title="with x402-fetch">
-              <div><span style={{ color: '#c4b5fd' }}>import</span> {'{ wrapFetchWithPayment }'} <span style={{ color: '#c4b5fd' }}>from</span> <span style={{ color: '#22c55e' }}>&quot;x402-fetch&quot;</span>;</div>
-              <div><span style={{ color: '#c4b5fd' }}>import</span> {'{ createWalletClient, http }'} <span style={{ color: '#c4b5fd' }}>from</span> <span style={{ color: '#22c55e' }}>&quot;viem&quot;</span>;</div>
-              <div><span style={{ color: '#c4b5fd' }}>import</span> {'{ privateKeyToAccount }'} <span style={{ color: '#c4b5fd' }}>from</span> <span style={{ color: '#22c55e' }}>&quot;viem/accounts&quot;</span>;</div>
+              <div><span style={{ color: '#c4b5fd' }}>import</span> {'{wrapFetchWithPayment}'} <span style={{ color: '#c4b5fd' }}>from</span> <span style={{ color: '#22c55e' }}>&quot;x402-fetch&quot;</span>;</div>
+              <div><span style={{ color: '#c4b5fd' }}>import</span> {'{createWalletClient, http}'} <span style={{ color: '#c4b5fd' }}>from</span> <span style={{ color: '#22c55e' }}>&quot;viem&quot;</span>;</div>
+              <div><span style={{ color: '#c4b5fd' }}>import</span> {'{privateKeyToAccount}'} <span style={{ color: '#c4b5fd' }}>from</span> <span style={{ color: '#22c55e' }}>&quot;viem/accounts&quot;</span>;</div>
               <br />
               <div style={{ color: '#64748b' }}>// Set up wallet + paid fetch</div>
               <div><span style={{ color: '#60a5fa' }}>const</span> account = privateKeyToAccount(<span style={{ color: '#22c55e' }}>&quot;0xYOUR_PRIVATE_KEY&quot;</span>);</div>
-              <div><span style={{ color: '#60a5fa' }}>const</span> wallet = createWalletClient({'{ account, chain: base, transport: http() }' });</div>
+              <div><span style={{ color: '#60a5fa' }}>const</span> wallet = createWalletClient({'{account, chain: base, transport: http()}'});</div>
               <div><span style={{ color: '#60a5fa' }}>const</span> paidFetch = wrapFetchWithPayment(fetch, wallet, <span style={{ color: '#eab308' }}>BigInt(1_000_000)</span>);</div>
               <br />
               <div style={{ color: '#64748b' }}>// Fetch avatar SVG (auto-pays $0.01 USDC)</div>
-              <div><span style={{ color: '#60a5fa' }}>const</span> res = <span style={{ color: '#c4b5fd' }}>await</span> paidFetch(<span style={{ color: '#22c55e' }}>&quot;https://x402.bankr.bot/0xd03a55ed9b93202b44c507f6d4514a76443880c2/generate-agent-avatar?name=Cipher&quot;</span>);</div>
+              <div style={{ wordBreak: 'break-all' }}><span style={{ color: '#60a5fa' }}>const</span> res = <span style={{ color: '#c4b5fd' }}>await</span> paidFetch(<span style={{ color: '#22c55e' }}>&quot;https://x402.bankr.bot/0xd03a55.../generate-agent-avatar?name=Cipher&quot;</span>);</div>
               <div><span style={{ color: '#60a5fa' }}>const</span> svg = <span style={{ color: '#c4b5fd' }}>await</span> res.text();</div>
             </Terminal>
           )}
-         
         </section>
 
         {/* API REFERENCE */}
-        <section style={{ maxWidth: 800, margin: '0 auto 80px', padding: '0 32px' }}>
+        <section
+          className="section-pad"
+          style={{ maxWidth: 800, margin: '0 auto 80px', padding: '0 24px' }}
+        >
           {sectionLabel('📋 API REFERENCE')}
           <p style={{ fontSize: 12, color: '#64748b', margin: '12px 0 0', lineHeight: 1.8 }}>
-            <code style={{ color: '#60a5fa' }}>GET</code> <code style={{ color: '#06b6d4' }}>/generate-agent-avatar</code> · Response: <code style={{ color: '#22c55e' }}>image/svg+xml</code>
+            <code style={{ color: '#60a5fa' }}>GET</code>{' '}
+            <code style={{ color: '#06b6d4' }}>/generate-agent-avatar</code>{' '}
+            · Response: <code style={{ color: '#22c55e' }}>image/svg+xml</code>
           </p>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, marginTop: 24 }}>
-            <thead>
-              <tr>
-                {['Param', 'Type', 'Default', 'Description'].map(h => (
-                  <th key={h} style={{ textAlign: 'left', padding: '10px 14px', background: '#1e293b', color: '#64748b', fontWeight: 400, fontSize: 11, borderBottom: '1px solid #1e3a5f' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                ['name', 'string', <span style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 4, fontSize: 9, padding: '2px 7px' }}>required</span>, 'Agent name — seed for all visual traits. Same name always produces same avatar.'],
-                ['mood', 'string', 'good', 'great | good | okay | stressed — controls eye expression and plumbob color.'],
-                ['status', 'string', 'working', 'working | idle — working shows raised tool arm.'],
-                ['size', 'number', '3', 'Pixel scale multiplier 1–4. Default 3 ≈ 100×200px.'],
-                ['color', 'string', 'auto', 'Shirt hex color without # e.g. ff6b35.'],
-                ['skinColor', 'string', 'auto', 'Skin tone hex without #. Auto-assigned from name if omitted.'],
-                ['hairColor', 'string', 'auto', 'Hair color hex without #. Auto-assigned from name if omitted.'],
-              ].map(([param, type, def, desc]) => (
-                <tr key={String(param)}>
-                  <td style={{ padding: '12px 14px', borderBottom: '1px solid rgba(30,58,95,0.5)' }}><span style={{ color: '#06b6d4', fontWeight: 700 }}>{param}</span></td>
-                  <td style={{ padding: '12px 14px', borderBottom: '1px solid rgba(30,58,95,0.5)' }}><span style={{ color: '#eab308', fontSize: 11 }}>{type}</span></td>
-                  <td style={{ padding: '12px 14px', borderBottom: '1px solid rgba(30,58,95,0.5)' }}>{typeof def === 'string' ? <span style={{ color: '#64748b', fontSize: 11, fontStyle: 'italic' }}>{def}</span> : def}</td>
-                  <td style={{ padding: '12px 14px', borderBottom: '1px solid rgba(30,58,95,0.5)', color: '#64748b', lineHeight: 1.7 }}>{desc}</td>
+
+          {/* Scrollable table wrapper on mobile */}
+          <div className="api-table-wrap" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', marginTop: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, minWidth: 480 }}>
+              <thead>
+                <tr>
+                  {['Param', 'Type', 'Default', 'Description'].map(h => (
+                    <th key={h} style={{
+                      textAlign: 'left',
+                      padding: '10px 14px',
+                      background: '#1e293b',
+                      color: '#64748b',
+                      fontWeight: 400,
+                      fontSize: 11,
+                      borderBottom: '1px solid #1e3a5f',
+                      whiteSpace: 'nowrap',
+                    }}>{h}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {[
+                  ['name', 'string', <span key="req" style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 4, fontSize: 9, padding: '2px 7px' }}>required</span>, 'Agent name — seed for all visual traits. Same name always produces same avatar.'],
+                  ['mood', 'string', 'good', 'great | good | okay | stressed — controls eye expression and plumbob color.'],
+                  ['status', 'string', 'working', 'working | idle — working shows raised tool arm.'],
+                  ['size', 'number', '3', 'Pixel scale multiplier 1–4. Default 3 ≈ 100×200px.'],
+                  ['color', 'string', 'auto', 'Shirt hex color without # e.g. ff6b35.'],
+                  ['skinColor', 'string', 'auto', 'Skin tone hex without #. Auto-assigned from name if omitted.'],
+                  ['hairColor', 'string', 'auto', 'Hair color hex without #. Auto-assigned from name if omitted.'],
+                ].map(([param, type, def, desc]) => (
+                  <tr key={String(param)}>
+                    <td style={{ padding: '12px 14px', borderBottom: '1px solid rgba(30,58,95,0.5)', whiteSpace: 'nowrap' }}>
+                      <span style={{ color: '#06b6d4', fontWeight: 700 }}>{param}</span>
+                    </td>
+                    <td style={{ padding: '12px 14px', borderBottom: '1px solid rgba(30,58,95,0.5)', whiteSpace: 'nowrap' }}>
+                      <span style={{ color: '#eab308', fontSize: 11 }}>{type}</span>
+                    </td>
+                    <td style={{ padding: '12px 14px', borderBottom: '1px solid rgba(30,58,95,0.5)', whiteSpace: 'nowrap' }}>
+                      {typeof def === 'string'
+                        ? <span style={{ color: '#64748b', fontSize: 11, fontStyle: 'italic' }}>{def}</span>
+                        : def
+                      }
+                    </td>
+                    <td style={{ padding: '12px 14px', borderBottom: '1px solid rgba(30,58,95,0.5)', color: '#64748b', lineHeight: 1.7 }}>{desc}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
 
         {/* FEATURES */}
-        <section style={{ maxWidth: 900, margin: '0 auto 80px', padding: '0 32px' }}>
+        <section
+          className="section-pad"
+          style={{ maxWidth: 900, margin: '0 auto 80px', padding: '0 24px' }}
+        >
           {sectionLabel('⚡ FEATURES')}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginTop: 24 }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+            gap: 16,
+            marginTop: 24,
+          }}>
             {[
               ['🔒', 'DETERMINISTIC TRAITS', 'Same agent name always produces the same avatar — every time, everywhere. No randomness at runtime.'],
               ['💰', 'x402 MICROPAYMENTS', '$0.01 USDC per call on Base. No API keys. No signup. Pay only when you generate.'],
@@ -467,7 +944,12 @@ export default function X402Page() {
               ['🤖', 'AGENT SELF-SERVICE', 'An OpenClaw agent can call this endpoint itself via the Bankr skill — buying its own trading card art.'],
               ['📊', 'REVENUE MONITORING', 'View live logs, request counts, and USDC earnings at bankr.bot/x402.'],
             ].map(([icon, title, desc]) => (
-              <div key={String(title)} style={{ background: '#0f172a', border: '1px solid #1e3a5f', borderRadius: 10, padding: 20 }}>
+              <div key={String(title)} style={{
+                background: '#0f172a',
+                border: '1px solid #1e3a5f',
+                borderRadius: 10,
+                padding: 20,
+              }}>
                 <div style={{ fontSize: 20, marginBottom: 12 }}>{icon}</div>
                 <div style={{ fontFamily: pixel, fontSize: 8, color: '#e2e8f0', marginBottom: 10, lineHeight: 1.6 }}>{title}</div>
                 <p style={{ fontSize: 11, color: '#64748b', lineHeight: 1.8, margin: 0 }}>{desc}</p>
@@ -477,16 +959,58 @@ export default function X402Page() {
         </section>
 
         {/* FOOTER */}
-        <footer style={{ borderTop: '1px solid #1e3a5f', padding: '40px 32px', textAlign: 'center', color: '#64748b', fontSize: 11, lineHeight: 2 }}>
-          <div style={{ display: 'flex', gap: 24, justifyContent: 'center', marginBottom: 16 }}>
-            {[['GitHub','https://github.com/clawharbor/clawharbor'],['x402 Docs','https://docs.bankr.bot/x402-cloud/overview'],['ClawHarbor','https://www.clawharbor.work'],['X / Twitter','https://x.com/clawharbor']].map(([label, href]) => (
-              <a key={label} href={href} target="_blank" rel="noreferrer" style={{ color: '#64748b', textDecoration: 'none' }}>{label}</a>
+        <footer style={{
+          borderTop: '1px solid #1e3a5f',
+          padding: '40px 24px',
+          textAlign: 'center',
+          color: '#64748b',
+          fontSize: 11,
+          lineHeight: 2,
+        }}>
+          <div
+            className="footer-links"
+            style={{
+              display: 'flex',
+              gap: 24,
+              justifyContent: 'center',
+              flexWrap: 'wrap',
+              marginBottom: 16,
+            }}
+          >
+            {[
+              ['GitHub', 'https://github.com/clawharbor/clawharbor'],
+              ['x402 Docs', 'https://docs.bankr.bot/x402-cloud/overview'],
+              ['ClawHarbor', 'https://www.clawharbor.work'],
+              ['X / Twitter', 'https://x.com/clawharbor'],
+            ].map(([label, href]) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                style={{ color: '#64748b', textDecoration: 'none' }}
+              >
+                {label}
+              </a>
             ))}
           </div>
-          <div>Made for <a href="https://www.clawharbor.work" target="_blank" rel="noreferrer" style={{ color: '#64748b' }}>ClawHarbor</a> × <a href="https://docs.bankr.bot/x402-cloud/overview" target="_blank" rel="noreferrer" style={{ color: '#64748b' }}>Bankr x402 Cloud</a></div>
+          <div>
+            Made for{' '}
+            <a href="https://www.clawharbor.work" target="_blank" rel="noreferrer" style={{ color: '#64748b' }}>ClawHarbor</a>
+            {' '}×{' '}
+            <a href="https://docs.bankr.bot/x402-cloud/overview" target="_blank" rel="noreferrer" style={{ color: '#64748b' }}>Bankr x402 Cloud</a>
+          </div>
         </footer>
 
       </div>
+
+      {/* Inline style for hamburger visibility */}
+      <style>{`
+        @media (max-width: 600px) {
+          .hamburger-btn { display: block !important; }
+          .nav-links { display: none !important; }
+        }
+      `}</style>
     </div>
   );
 }
