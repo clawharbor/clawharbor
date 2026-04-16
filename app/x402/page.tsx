@@ -266,12 +266,12 @@ export default function X402Page() {
 <div
   style={{
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 110px))',
-    justifyContent: 'center',
-    gap: 16,
+    gridTemplateColumns: 'repeat(4, 1fr)',
+    gap: 24,
+    maxWidth: 640,
     margin: '0 auto 80px',
-    maxWidth: 700,
     padding: '0 32px',
+    justifyItems: 'center',
   }}
 >
           {SHOWCASE_AGENTS.map(({ name, mood, status }) => (
