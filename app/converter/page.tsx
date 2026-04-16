@@ -17,7 +17,7 @@ export default function Base64ToSVG() {
     setCopied(false);
 
     if (!input.trim()) {
-      setError("Input tidak boleh kosong.");
+      setError("Input must not be empty.");
       return;
     }
 
@@ -31,7 +31,7 @@ export default function Base64ToSVG() {
         }
         const decoded = atob(b64);
         if (!decoded.trim().startsWith("<svg") && !decoded.includes("<svg")) {
-          setError("Hasil decode bukan SVG yang valid. Pastikan input adalah Base64 dari file SVG.");
+          setError("Decoded output is not a valid SVG. Make sure the input is a Base64-encoded SVG file.");
           return;
         }
         setSvgOutput(decoded);
@@ -41,7 +41,7 @@ export default function Base64ToSVG() {
         setSvgOutput(`data:image/svg+xml;base64,${b64}`);
       }
     } catch {
-      setError("Gagal mengkonversi. Pastikan input Base64 valid dan merupakan encode dari SVG.");
+      setError("Conversion failed. Please ensure the Base64 input is valid and encodes an SVG.");
     }
   }, [input, mode]);
 
@@ -323,8 +323,8 @@ export default function Base64ToSVG() {
             onChange={(e) => setInput(e.target.value)}
             placeholder={
               mode === "b64tosvg"
-                ? "Paste Base64 string di sini...\nContoh: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjwvc3ZnPg=="
-                : "Paste kode SVG di sini...\nContoh: <svg xmlns=\"http://www.w3.org/2000/svg\">...</svg>"
+                ? "Paste your Base64 string here...\nExample: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjwvc3ZnPg=="
+                : "Paste your SVG code here...\nExample: <svg xmlns=\"http://www.w3.org/2000/svg\">...</svg>"
             }
             rows={8}
             style={{
@@ -386,11 +386,11 @@ export default function Base64ToSVG() {
               </label>
               <div style={{ display: "flex", gap: "8px" }}>
                 <button className="btn-ghost" onClick={handleCopy}>
-                  {copied ? "✓ Tersalin!" : "⎘ Copy"}
+                  {copied ? "✓ Copied!" : "⎘ Copy"}
                 </button>
                 {mode === "b64tosvg" && (
                   <button className="btn-ghost" onClick={handleDownload}>
-                    {downloaded ? "✓ Diunduh!" : "↓ Download .svg"}
+                    {downloaded ? "✓ Downloaded!" : "↓ Download .svg"}
                   </button>
                 )}
               </div>
@@ -475,15 +475,15 @@ export default function Base64ToSVG() {
             <div style={{ color: "#f0c040", marginBottom: "6px", letterSpacing: "0.1em" }}>
               BASE64 → SVG
             </div>
-            Input string Base64 (dengan atau tanpa prefix <code style={{ color: "#aaa" }}>data:image/svg+xml;base64,</code>),
-            tool akan decode dan menampilkan SVG beserta preview-nya.
+            Paste a Base64 string (with or without the <code style={{ color: "#aaa" }}>data:image/svg+xml;base64,</code> prefix).
+            The tool will decode it and render a live SVG preview.
           </div>
           <div>
             <div style={{ color: "#f0c040", marginBottom: "6px", letterSpacing: "0.1em" }}>
               SVG → BASE64
             </div>
-            Paste kode SVG mentah, tool akan mengkonversi ke string Base64 dengan format
-            data URI yang siap digunakan di CSS atau HTML.
+            Paste raw SVG markup and the tool will encode it into a Base64 data URI,
+            ready to use inline in CSS or HTML.
           </div>
         </div>
       </div>
