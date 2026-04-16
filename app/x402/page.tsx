@@ -336,7 +336,7 @@ export default function X402Page() {
               </div>
               {showDeploy && (
                 <div style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 6, padding: '14px 16px', fontSize: 11, color: '#22c55e', textAlign: 'center', marginTop: 16, lineHeight: 1.8, width: '100%' }}>
-                  ✔ Avatar generated locally — deploy to serve live!<br />
+                  ✔ Avatar generated — deploy to serve live!<br />
                   <code style={{ fontSize: 10, color: '#06b6d4' }}>bankr x402 deploy</code>
                 </div>
               )}
