@@ -353,13 +353,13 @@ export default function X402Page() {
             <div style={{ color: '#64748b' }}># Install Bankr CLI</div>
             <div style={{ color: '#60a5fa' }}>$ npm install -g @bankr/cli</div>
             <br />
-            <div style={{ color: '#64748b' }}># Login — creates / links your Base wallet</div>
+            <div style={{ color: '#64748b' }}># Login — creates / login</div>
             <div style={{ color: '#60a5fa' }}>$ bankr login</div>
             <br />
-            <div style={{ color: '#64748b' }}># Deploy the service</div>
-            <div style={{ color: '#60a5fa' }}>$ cd x402-agent-avatar &amp;&amp; bankr x402 deploy</div>
+            <div style={{ color: '#64748b' }}># Call the service</div>
+            <div style={{ color: '#60a5fa' }}>$ bankr x402 call "https://x402.bankr.bot/0xd03a55ed9b93202b44c507f6d4514a76443880c2/generate-agent-avatar?name=Cipher&mood=great"</div>
             <br />
-            <div style={{ paddingLeft: 16, color: '#22c55e' }}>✔ Deployed 1 service(s)</div>
+            <div style={{ paddingLeft: 16, color: '#22c55e' }}>✔ Call 1 service(s)</div>
             <br />
             <div style={{ paddingLeft: 16, color: '#64748b' }}>  Service: <span style={{ color: '#06b6d4' }}>generate-agent-avatar</span></div>
             <div style={{ paddingLeft: 16, color: '#64748b' }}>  URL:     <span style={{ color: '#60a5fa' }}>https://x402.bankr.bot/0xd03a55ed9b93202b44c507f6d4514a76443880c2/generate-agent-avatar</span></div>
