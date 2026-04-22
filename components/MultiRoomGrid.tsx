@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * MultiRoomGrid — claw-empire style with dept room transit animation
+ * MultiRoomGrid — style with dept room transit animation
  *
  * Agent movement flow:
  *   idle → working:   Break Room → [dept room ~2s] → Work Room
@@ -21,6 +21,7 @@ import { NPCParticles } from './NPCParticles';
 import { ChatBubble } from './ChatBubble';
 import { CooldownTimer } from './CooldownTimer';
 import { prettifyTask } from './utils';
+import { OfficePet } from './OfficePet';
 
 // ─── Palette ──────────────────────────────────────────────────────────────────
 const P = {
@@ -369,13 +370,26 @@ function BreakRoom({ agents, npcSize, onClickAgent, forceThoughts,
   forceThoughts:Record<string,string>; celebrations:{agentId:string}[];
   partyMode:boolean; chatBubbles:Record<string,{message:string;color:string}>;
 }) {
+  const breakRoomRef = useRef<HTMLDivElement>(null);
+  const [roomWidth, setRoomWidth] = useState(600);
+  useEffect(() => {
+    if (!breakRoomRef.current) return;
+    const ro = new ResizeObserver(entries => {
+      setRoomWidth(entries[0].contentRect.width);
+    });
+    ro.observe(breakRoomRef.current);
+    return () => ro.disconnect();
+  }, []);
+
   return (
-    <div style={{position:'relative',minHeight:agents.length>0?180:110,
+    <div ref={breakRoomRef} style={{position:'relative',minHeight:agents.length>0?180:110,
       borderRadius:4,overflow:'hidden',border:`2.5px solid ${BREAK_THEME.wall}`,
       display:'flex',flexDirection:'column',padding:'32px 24px 16px'}}>
       <RoomBg theme={BREAK_THEME}/>
       <RoomSign label="Break Room" icon="☕" accent={BREAK_THEME.accent}/>
       <Cactus side="right"/>
+      {/* 🐾 Bankr Bot mascot — roams the Break Room */}
+      <OfficePet containerWidth={roomWidth} containerHeight={80} scale={0.85}/>
       {/* Left couch */}
       <div style={{position:'absolute',bottom:10,left:20,zIndex:3,opacity:0.7}}>
         <div style={{position:'relative',width:68,height:26}}>
