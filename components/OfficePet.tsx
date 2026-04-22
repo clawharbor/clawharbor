@@ -2,474 +2,180 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
-// ─── Bankr Robot Pixel Art ────────────────────────────────────────────────────
-// Warna brand Bankr: biru gelap (#1a3a5c), biru terang (#2563eb), accent (#38bdf8)
+// ─── Bankr color palette (matches official logo) ──────────────────────────────
+const C = {
+  cream:   '#f0e4c8',
+  creamDk: '#d4c4a0',
+  black:   '#1a1a1a',
+  orange:  '#ff6b2b',
+  yellow:  '#ffd700',
+};
 
 type PetState = 'walk' | 'idle' | 'sit' | 'wave';
 type Direction = 'left' | 'right';
 
-function BankrRobot({
-  state,
-  direction,
-  s = 4,
-}: {
-  state: PetState;
-  direction: Direction;
-  s?: number;
+function BankrBot({ state, direction, tick, s = 3 }: {
+  state: PetState; direction: Direction; tick: number; s?: number;
 }) {
   const flip = direction === 'left';
-  const bobY = state === 'idle' || state === 'sit' ? 0 : Math.sin(Date.now() / 200) * s * 0.3;
-
-  // Leg animation for walking
-  const tick = Math.floor(Date.now() / 180);
-  const legPhase = state === 'walk' ? tick % 2 : 0;
-
-  const bodyColor = '#1e3a8a';   // Bankr dark blue
-  const headColor = '#1d4ed8';   // Bankr mid blue
-  const accentColor = '#38bdf8'; // Bankr light blue / cyan
-  const screenColor = '#0ea5e9'; // Screen glow
-  const eyeColor = '#ffffff';
-  const jointColor = '#93c5fd';
+  const legL = state === 'walk' ? (tick%2===0?-18:18) : (state==='sit'?75:0);
+  const legR = state === 'walk' ? (tick%2===0?18:-18) : (state==='sit'?-75:0);
+  const armL = state === 'wave' ? -60 : (state==='walk'?(tick%2===0?12:-12):5);
+  const armR = state === 'walk' ? (tick%2===0?-12:12) : -5;
+  const blink = tick % 40 < 2;
+  const eyeH = blink ? 1 : s * 1.8;
+  const px = (n: number) => `${n}px`;
 
   return (
-    <div
-      style={{
-        position: 'relative',
-        width: s * 10,
-        height: s * 18,
-        transform: flip ? 'scaleX(-1)' : undefined,
-        imageRendering: 'pixelated',
-        transition: 'transform 0.15s',
-      }}
-    >
-      {/* ── Antenna ── */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: s * 4.5,
-        width: s,
-        height: s * 2,
-        background: accentColor,
-        borderRadius: s * 0.3,
-      }} />
-      <div style={{
-        position: 'absolute',
-        top: -s * 0.5,
-        left: s * 4,
-        width: s * 2,
-        height: s * 1,
-        background: accentColor,
-        borderRadius: '50%',
-      }} />
+    <div style={{ position:'relative', width:px(s*22), height:px(s*28),
+      transform: flip?'scaleX(-1)':undefined, imageRendering:'pixelated' as any }}>
 
-      {/* ── Head ── */}
-      <div style={{
-        position: 'absolute',
-        top: s * 1.5,
-        left: s,
-        width: s * 8,
-        height: s * 6,
-        background: headColor,
-        borderRadius: s * 0.8,
-        border: `${s * 0.3}px solid ${accentColor}`,
-      }}>
-        {/* Screen face */}
-        <div style={{
-          position: 'absolute',
-          top: s * 0.8,
-          left: s * 1,
-          width: s * 6,
-          height: s * 3.5,
-          background: '#0c1a3a',
-          borderRadius: s * 0.4,
-          border: `${s * 0.2}px solid ${screenColor}`,
-          overflow: 'hidden',
-        }}>
-          {/* Eyes */}
-          <div style={{
-            position: 'absolute',
-            top: s * 0.6,
-            left: s * 0.8,
-            width: s * 1.5,
-            height: s * 1.5,
-            background: state === 'wave' ? accentColor : screenColor,
-            borderRadius: s * 0.2,
-            boxShadow: `0 0 ${s}px ${screenColor}`,
-            transition: 'background 0.3s',
-          }} />
-          <div style={{
-            position: 'absolute',
-            top: s * 0.6,
-            right: s * 0.8,
-            width: s * 1.5,
-            height: s * 1.5,
-            background: state === 'wave' ? accentColor : screenColor,
-            borderRadius: s * 0.2,
-            boxShadow: `0 0 ${s}px ${screenColor}`,
-            transition: 'background 0.3s',
-          }} />
-          {/* Smile / status bar */}
-          <div style={{
-            position: 'absolute',
-            bottom: s * 0.5,
-            left: s * 1,
-            width: s * 4,
-            height: s * 0.4,
-            background: accentColor,
-            borderRadius: s * 0.2,
-            opacity: 0.8,
-          }} />
+      {/* Antenna */}
+      <div style={{ position:'absolute', top:px(-s*2), left:px(s*10), width:px(s*2), height:px(s*3), background:C.black, borderRadius:px(s*.3) }}/>
+      <div style={{ position:'absolute', top:px(-s*3.5), left:px(s*9), width:px(s*4), height:px(s*4), background:C.orange, borderRadius:'50%', border:`${px(s*.5)} solid ${C.black}` }}/>
+
+      {/* Head — retro TV */}
+      <div style={{ position:'absolute', top:px(s*.5), left:px(s*1), width:px(s*20), height:px(s*14), background:C.cream, borderRadius:px(s*1.2), border:`${px(s*.6)} solid ${C.black}` }}>
+        {/* Screen */}
+        <div style={{ position:'absolute', top:px(s*1.2), left:px(s*1.5), width:px(s*12), height:px(s*10), background:C.orange, borderRadius:px(s*.7), border:`${px(s*.5)} solid ${C.black}`, overflow:'hidden' }}>
+          <div style={{ position:'absolute', top:px(s*.3), left:px(s*.3), width:px(s*3), height:px(s*1.2), background:'rgba(255,255,255,0.25)', borderRadius:px(s*.3) }}/>
+          <div style={{ position:'absolute', top:px(s*2), left:px(s*1.5), width:px(s*2.5), height:px(eyeH), background:C.yellow, borderRadius:px(s*.2) }}/>
+          <div style={{ position:'absolute', top:px(s*2), left:px(s*6.5), width:px(s*2.5), height:px(eyeH), background:C.yellow, borderRadius:px(s*.2) }}/>
+          <div style={{ position:'absolute', bottom:px(s*1.8), left:px(s*1.5), width:px(s*9), height:px(s*.8), background:C.yellow, borderRadius:px(s*.2), clipPath:'polygon(0 0,100% 0,80% 100%,20% 100%)' }}/>
+        </div>
+        {/* Side panel */}
+        <div style={{ position:'absolute', top:px(s*1.5), right:px(s*1), width:px(s*4), height:px(s*9), background:C.creamDk, borderRadius:px(s*.4), border:`${px(s*.3)} solid rgba(26,26,26,0.3)`, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:px(s*.8), padding:px(s*.5) }}>
+          <div style={{ width:px(s*2.5), height:px(s*.5), background:C.black, opacity:.4, borderRadius:'1px' }}/>
+          <div style={{ width:px(s*.8), height:px(s*3), background:C.black, opacity:.35, borderRadius:'1px' }}/>
+          <div style={{ width:px(s*2.5), height:px(s*.5), background:C.black, opacity:.4, borderRadius:'1px' }}/>
+          <div style={{ width:px(s*.8), height:px(s*2), background:C.black, opacity:.35, borderRadius:'1px' }}/>
+        </div>
+        {/* Chin */}
+        <div style={{ position:'absolute', bottom:px(s*.8), left:px(s*1.5), width:px(s*6), height:px(s*1.2), background:C.creamDk, borderRadius:px(s*.3), border:`${px(s*.2)} solid rgba(26,26,26,0.3)` }}/>
+      </div>
+
+      {/* Body */}
+      <div style={{ position:'absolute', top:px(s*15), left:px(s*4), width:px(s*14), height:px(s*8), background:C.cream, borderRadius:px(s*.6), border:`${px(s*.6)} solid ${C.black}` }}>
+        <div style={{ position:'absolute', top:px(s*1.5), left:px(s*2), width:px(s*6), height:px(s*4), background:C.creamDk, borderRadius:px(s*.4), border:`${px(s*.3)} solid rgba(26,26,26,0.3)` }}>
+          <div style={{ margin:`${px(s*.5)} auto 0`, width:px(s*3), height:px(s*.7), background:C.orange, borderRadius:'1px', opacity:.8 }}/>
+          <div style={{ margin:`${px(s*.4)} auto 0`, width:px(s*4), height:px(s*.7), background:C.orange, borderRadius:'1px', opacity:.5 }}/>
         </div>
       </div>
 
-      {/* ── Body ── */}
-      <div style={{
-        position: 'absolute',
-        top: s * 7.5,
-        left: s * 1.5,
-        width: s * 7,
-        height: s * 5,
-        background: bodyColor,
-        borderRadius: s * 0.5,
-        border: `${s * 0.3}px solid ${jointColor}`,
-      }}>
-        {/* BNKR logo badge */}
-        <div style={{
-          position: 'absolute',
-          top: s * 1,
-          left: s * 1.5,
-          width: s * 4,
-          height: s * 2.5,
-          background: '#0c1a3a',
-          borderRadius: s * 0.3,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          <div style={{
-            fontSize: s * 1.4,
-            fontFamily: 'monospace',
-            color: accentColor,
-            fontWeight: 700,
-            letterSpacing: 0,
-            lineHeight: 1,
-          }}>
-            BNKR
-          </div>
-        </div>
+      {/* Left arm */}
+      <div style={{ position:'absolute', top:px(s*15.5), left:px(s*1), width:px(s*3.5), height:px(s*7), background:C.cream, borderRadius:px(s*.5), border:`${px(s*.5)} solid ${C.black}`, transform:`rotate(${armL}deg)`, transformOrigin:'top center', transition:'transform .25s' }}>
+        {state === 'wave' && <div style={{ position:'absolute', top:px(-s), left:px(-s), width:px(s*2), height:px(s*2), background:C.cream, borderRadius:'50%', border:`${px(s*.4)} solid ${C.black}` }}/>}
       </div>
 
-      {/* ── Left Arm ── */}
-      <div style={{
-        position: 'absolute',
-        top: s * 8,
-        left: 0,
-        width: s * 1.5,
-        height: state === 'wave' ? s * 3 : s * 4,
-        background: bodyColor,
-        borderRadius: s * 0.4,
-        border: `${s * 0.2}px solid ${jointColor}`,
-        transform: state === 'wave' ? 'rotate(-50deg)' : legPhase === 0 ? 'rotate(10deg)' : 'rotate(-10deg)',
-        transformOrigin: 'top center',
-        transition: 'transform 0.2s',
-      }} />
+      {/* Right arm */}
+      <div style={{ position:'absolute', top:px(s*15.5), right:px(s*1), width:px(s*3.5), height:px(s*7), background:C.cream, borderRadius:px(s*.5), border:`${px(s*.5)} solid ${C.black}`, transform:`rotate(${armR}deg)`, transformOrigin:'top center', transition:'transform .25s' }}/>
 
-      {/* ── Right Arm ── */}
-      <div style={{
-        position: 'absolute',
-        top: s * 8,
-        right: 0,
-        width: s * 1.5,
-        height: s * 4,
-        background: bodyColor,
-        borderRadius: s * 0.4,
-        border: `${s * 0.2}px solid ${jointColor}`,
-        transform: legPhase === 0 ? 'rotate(-10deg)' : 'rotate(10deg)',
-        transformOrigin: 'top center',
-        transition: 'transform 0.2s',
-      }} />
-
-      {/* ── Left Leg ── */}
-      <div style={{
-        position: 'absolute',
-        top: s * 12.5,
-        left: s * 2.5,
-        width: s * 2,
-        height: s * 4,
-        background: bodyColor,
-        borderRadius: s * 0.4,
-        border: `${s * 0.2}px solid ${jointColor}`,
-        transform: state === 'sit' ? 'rotate(80deg)' : legPhase === 0 ? 'rotate(-15deg)' : 'rotate(15deg)',
-        transformOrigin: 'top center',
-        transition: 'transform 0.18s',
-      }}>
-        {/* Foot */}
-        <div style={{
-          position: 'absolute',
-          bottom: -s * 0.5,
-          left: -s * 0.5,
-          width: s * 3,
-          height: s,
-          background: accentColor,
-          borderRadius: s * 0.3,
-        }} />
+      {/* Left leg */}
+      <div style={{ position:'absolute', top:px(s*22.5), left:px(s*5), width:px(s*4), height:px(s*6), background:C.cream, borderRadius:px(s*.4), border:`${px(s*.5)} solid ${C.black}`, transform:`rotate(${legL}deg)`, transformOrigin:'top center', transition:'transform .2s' }}>
+        <div style={{ position:'absolute', bottom:px(-s*.4), left:px(-s*.5), width:px(s*5), height:px(s*1.5), background:C.orange, borderRadius:px(s*.4), border:`${px(s*.4)} solid ${C.black}` }}/>
       </div>
 
-      {/* ── Right Leg ── */}
-      <div style={{
-        position: 'absolute',
-        top: s * 12.5,
-        right: s * 2.5,
-        width: s * 2,
-        height: s * 4,
-        background: bodyColor,
-        borderRadius: s * 0.4,
-        border: `${s * 0.2}px solid ${jointColor}`,
-        transform: state === 'sit' ? 'rotate(-80deg)' : legPhase === 0 ? 'rotate(15deg)' : 'rotate(-15deg)',
-        transformOrigin: 'top center',
-        transition: 'transform 0.18s',
-      }}>
-        {/* Foot */}
-        <div style={{
-          position: 'absolute',
-          bottom: -s * 0.5,
-          right: -s * 0.5,
-          width: s * 3,
-          height: s,
-          background: accentColor,
-          borderRadius: s * 0.3,
-        }} />
+      {/* Right leg */}
+      <div style={{ position:'absolute', top:px(s*22.5), right:px(s*5), width:px(s*4), height:px(s*6), background:C.cream, borderRadius:px(s*.4), border:`${px(s*.5)} solid ${C.black}`, transform:`rotate(${legR}deg)`, transformOrigin:'top center', transition:'transform .2s' }}>
+        <div style={{ position:'absolute', bottom:px(-s*.4), right:px(-s*.5), width:px(s*5), height:px(s*1.5), background:C.orange, borderRadius:px(s*.4), border:`${px(s*.4)} solid ${C.black}` }}/>
       </div>
     </div>
   );
 }
 
-// ─── Speech Bubble ────────────────────────────────────────────────────────────
 const PET_QUIPS = [
-  'gm ser 🌅',
-  '$BNKR to the moon',
-  'running on Base ⚡',
-  'LFG!',
-  '*beep boop*',
-  'on-chain vibes',
-  'ser, your agents need payroll',
-  'buy high sell never',
-  'based and blue-pilled',
-  'executing swap...',
-  'wen lambo?',
-  'skill installed ✅',
+  'gm ser 🌅','$BNKR to the moon','running on Base ⚡','LFG!','*beep boop*',
+  'on-chain vibes','ser, your agents need payroll','buy high sell never',
+  'based and orange-pilled','executing swap...','wen lambo?','skill installed ✅',
 ];
 
 function SpeechBubble({ text, flipped }: { text: string; flipped: boolean }) {
   return (
-    <div style={{
-      position: 'absolute',
-      top: -40,
-      [flipped ? 'right' : 'left']: 0,
-      background: 'rgba(255,255,255,0.95)',
-      color: '#1e3a8a',
-      fontSize: 11,
-      fontFamily: 'monospace',
-      fontWeight: 700,
-      padding: '4px 8px',
-      borderRadius: 8,
-      whiteSpace: 'nowrap',
-      border: '1.5px solid #38bdf8',
-      zIndex: 100,
-      pointerEvents: 'none',
-    }}>
+    <div style={{ position:'absolute', bottom:'105%', [flipped?'right':'left']:0,
+      background:'rgba(255,255,255,0.97)', color:C.black, fontSize:11,
+      fontFamily:'monospace', fontWeight:700, padding:'4px 8px', borderRadius:8,
+      whiteSpace:'nowrap', border:`2px solid ${C.orange}`, zIndex:100, pointerEvents:'none' }}>
       {text}
-      <div style={{
-        position: 'absolute',
-        bottom: -7,
-        [flipped ? 'right' : 'left']: 12,
-        width: 0,
-        height: 0,
-        borderLeft: '5px solid transparent',
-        borderRight: '5px solid transparent',
-        borderTop: '7px solid #38bdf8',
-      }} />
+      <div style={{ position:'absolute', bottom:-8, [flipped?'right':'left']:10,
+        width:0, height:0, borderLeft:'5px solid transparent', borderRight:'5px solid transparent',
+        borderTop:`8px solid ${C.orange}` }}/>
     </div>
   );
 }
 
-// ─── Main OfficePet component ─────────────────────────────────────────────────
-interface OfficePetProps {
-  containerWidth?: number;
-  containerHeight?: number;
-  scale?: number;
-}
-
-export function OfficePet({ containerWidth = 800, containerHeight = 200, scale = 1 }: OfficePetProps) {
-  const petWidth = 40 * scale;
-  const petHeight = 72 * scale;
+export function OfficePet({ containerWidth = 800, scale = 1 }: { containerWidth?: number; scale?: number }) {
+  const s = 3 * scale;
+  const petWidth = s * 22;
 
   const [x, setX] = useState(containerWidth / 2);
   const [petState, setPetState] = useState<PetState>('idle');
   const [direction, setDirection] = useState<Direction>('right');
   const [quip, setQuip] = useState<string | null>(null);
+  const [tick, setTick] = useState(0);
   const [hovered, setHovered] = useState(false);
 
   const xRef = useRef(x);
-  const dirRef = useRef(direction);
-  const stateRef = useRef(petState);
   const frameRef = useRef<number | undefined>(undefined);
-
   xRef.current = x;
-  dirRef.current = direction;
-  stateRef.current = petState;
 
-  // Force re-render for walking animation
-  const [tick, setTick] = useState(0);
   useEffect(() => {
-    const interval = setInterval(() => setTick(t => t + 1), 180);
+    const interval = setInterval(() => setTick(t => t + 1), 200);
     return () => clearInterval(interval);
   }, []);
 
-  // AI movement: randomly walk, pause, sit, wave
   useEffect(() => {
     let timeout: ReturnType<typeof setTimeout>;
-
     const decide = () => {
       const rand = Math.random();
-
       if (rand < 0.45) {
-        // Walk to a random x position
         const target = Math.random() * (containerWidth - petWidth * 2) + petWidth;
-        const dir: Direction = target > xRef.current ? 'right' : 'left';
-        setDirection(dir);
+        setDirection(target > xRef.current ? 'right' : 'left');
         setPetState('walk');
-
-        const speed = 1.2 * scale;
-        const dist = Math.abs(target - xRef.current);
-        const duration = (dist / speed) * 16;
-
-        let startX = xRef.current;
+        const startX = xRef.current;
+        const duration = (Math.abs(target - startX) / (1.5 * scale)) * 16;
         let startTime: number | null = null;
-
         const animate = (time: number) => {
           if (!startTime) startTime = time;
-          const elapsed = time - startTime;
-          const progress = Math.min(elapsed / duration, 1);
+          const progress = Math.min((time - startTime) / duration, 1);
           const newX = startX + (target - startX) * progress;
-          setX(newX);
-          xRef.current = newX;
-
-          if (progress < 1) {
-            frameRef.current = requestAnimationFrame(animate);
-          } else {
-            setPetState('idle');
-            timeout = setTimeout(decide, 800 + Math.random() * 1200);
-          }
+          setX(newX); xRef.current = newX;
+          if (progress < 1) { frameRef.current = requestAnimationFrame(animate); }
+          else { setPetState('idle'); timeout = setTimeout(decide, 800 + Math.random()*1200); }
         };
         frameRef.current = requestAnimationFrame(animate);
-
       } else if (rand < 0.65) {
-        // Sit and chill
         setPetState('sit');
-        timeout = setTimeout(() => {
-          setPetState('idle');
-          timeout = setTimeout(decide, 500);
-        }, 2000 + Math.random() * 2000);
-
-      } else if (rand < 0.8) {
-        // Wave + show quip
-        setPetState('wave');
-        const q = PET_QUIPS[Math.floor(Math.random() * PET_QUIPS.length)];
-        setQuip(q);
-        timeout = setTimeout(() => {
-          setQuip(null);
-          setPetState('idle');
-          timeout = setTimeout(decide, 600);
-        }, 2500);
-
+        timeout = setTimeout(() => { setPetState('idle'); timeout = setTimeout(decide, 500); }, 2000 + Math.random()*2000);
       } else {
-        // Just idle
-        setPetState('idle');
-        timeout = setTimeout(decide, 1500 + Math.random() * 2000);
+        setPetState('wave');
+        setQuip(PET_QUIPS[Math.floor(Math.random()*PET_QUIPS.length)]);
+        timeout = setTimeout(() => { setQuip(null); setPetState('idle'); timeout = setTimeout(decide, 600); }, 2500);
       }
     };
-
     timeout = setTimeout(decide, 1200);
-    return () => {
-      clearTimeout(timeout);
-      if (frameRef.current) cancelAnimationFrame(frameRef.current);
-    };
+    return () => { clearTimeout(timeout); if (frameRef.current) cancelAnimationFrame(frameRef.current); };
   }, [containerWidth, petWidth, scale]);
 
-  // Click: wave and say something
   const handleClick = useCallback(() => {
     if (frameRef.current) cancelAnimationFrame(frameRef.current);
     setPetState('wave');
-    const q = PET_QUIPS[Math.floor(Math.random() * PET_QUIPS.length)];
-    setQuip(q);
-    setTimeout(() => {
-      setQuip(null);
-      setPetState('idle');
-    }, 2500);
+    setQuip(PET_QUIPS[Math.floor(Math.random()*PET_QUIPS.length)]);
+    setTimeout(() => { setQuip(null); setPetState('idle'); }, 2500);
   }, []);
 
-  const clampedX = Math.max(0, Math.min(x, containerWidth - petWidth));
-
   return (
-    <div
-      style={{
-        position: 'absolute',
-        left: clampedX,
-        bottom: 0,
-        width: petWidth,
-        height: petHeight,
-        cursor: 'pointer',
-        zIndex: 10,
-        userSelect: 'none',
-      }}
-      onClick={handleClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      title="Click me! I'm the Bankr bot 🤖"
-    >
-      {/* Hover glow ring */}
-      {hovered && (
-        <div style={{
-          position: 'absolute',
-          bottom: -4,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: petWidth * 0.8,
-          height: petWidth * 0.25,
-          background: 'rgba(56, 189, 248, 0.25)',
-          borderRadius: '50%',
-          filter: 'blur(4px)',
-        }} />
-      )}
-
-      {/* Speech bubble */}
-      {quip && <SpeechBubble text={quip} flipped={direction === 'left'} />}
-
-      {/* The robot */}
-      <BankrRobot
-        state={petState}
-        direction={direction}
-        s={scale * 4}
-      />
-
-      {/* Name tag on hover */}
-      {hovered && (
-        <div style={{
-          position: 'absolute',
-          bottom: -18,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          fontSize: 9,
-          fontFamily: 'monospace',
-          color: '#38bdf8',
-          whiteSpace: 'nowrap',
-          fontWeight: 700,
-          letterSpacing: 1,
-        }}>
-          BANKR BOT
-        </div>
-      )}
+    <div style={{ position:'absolute', left:Math.max(0, Math.min(x, containerWidth - petWidth)),
+      bottom:0, width:petWidth, cursor:'pointer', zIndex:10, userSelect:'none' }}
+      onClick={handleClick} onMouseEnter={()=>setHovered(true)} onMouseLeave={()=>setHovered(false)}
+      title="Bankr Bot 🤖 — click me!">
+      {hovered && <div style={{ position:'absolute', bottom:-4, left:'50%', transform:'translateX(-50%)',
+        width:petWidth*.8, height:petWidth*.2, background:'rgba(255,107,43,0.3)', borderRadius:'50%', filter:'blur(6px)' }}/>}
+      {quip && <SpeechBubble text={quip} flipped={direction==='left'}/>}
+      <BankrBot state={petState} direction={direction} tick={tick} s={s}/>
+      {hovered && <div style={{ position:'absolute', bottom:-18, left:'50%', transform:'translateX(-50%)',
+        fontSize:9, fontFamily:'monospace', color:C.orange, whiteSpace:'nowrap', fontWeight:700, letterSpacing:1 }}>
+        BANKR BOT
+      </div>}
     </div>
   );
 }
