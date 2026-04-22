@@ -313,7 +313,7 @@ export function OfficePet({ containerWidth = 800, containerHeight = 200, scale =
   const xRef = useRef(x);
   const dirRef = useRef(direction);
   const stateRef = useRef(petState);
-  const frameRef = useRef<number>();
+  const frameRef = useRef<number | undefined>(undefined);
 
   xRef.current = x;
   dirRef.current = direction;
