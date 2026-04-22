@@ -389,7 +389,7 @@ function BreakRoom({ agents, npcSize, onClickAgent, forceThoughts,
       <RoomSign label="Break Room" icon="☕" accent={BREAK_THEME.accent}/>
       <Cactus side="right"/>
       {/* 🐾 Bankr Bot mascot — roams the Break Room */}
-      <OfficePet containerWidth={roomWidth} containerHeight={80} scale={0.85}/>
+      <OfficePet containerWidth={roomWidth} scale={0.85}/>
       {/* Left couch */}
       <div style={{position:'absolute',bottom:10,left:20,zIndex:3,opacity:0.7}}>
         <div style={{position:'relative',width:68,height:26}}>
