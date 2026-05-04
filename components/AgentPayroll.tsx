@@ -447,6 +447,24 @@ export function PayAgentModal({
     setPendingQuote(null);
   };
 
+  // Convert a base-units amount (string, integer) to a human-readable decimal
+  // string. Trails returns toAmount in base units (e.g. "990604" for USDC = 0.990604).
+  const formatBaseUnits = (baseUnits: string | undefined, decimals: number): string => {
+    if (!baseUnits) return '?';
+    try {
+      const big = BigInt(baseUnits);
+      const divisor = BigInt(10) ** BigInt(decimals);
+      const whole = big / divisor;
+      const fraction = big % divisor;
+      if (fraction === BigInt(0)) return whole.toString();
+      // Render up to 6 fractional digits, trim trailing zeros
+      const fractionStr = fraction.toString().padStart(decimals, '0').slice(0, 6).replace(/0+$/, '');
+      return fractionStr ? `${whole}.${fractionStr}` : whole.toString();
+    } catch {
+      return baseUnits;
+    }
+  };
+
   const label = (text: string) => (
     <label style={{
       fontFamily: '"Press Start 2P", monospace',
@@ -592,7 +610,12 @@ export function PayAgentModal({
               }}>
                 <div>From: <span style={{ color: '#a78bfa' }}>{amount} USDC on {sourceChain.name}</span></div>
                 <div>To: <span style={{ color: '#22c55e' }}>{selectedAgent.emoji} {selectedAgent.name}</span></div>
-                <div>Receives: <span style={{ color: selectedToken.color }}>≈ {pendingQuote.quote?.toAmount || '?'} {selectedToken.symbol} on Base</span></div>
+                <div>
+                  Receives:{' '}
+                  <span style={{ color: selectedToken.color }}>
+                    ≈ {formatBaseUnits(pendingQuote.quote?.toAmount, selectedToken.decimals)} {selectedToken.symbol} on Base
+                  </span>
+                </div>
                 {pendingQuote.quote?.estimatedDuration && (
                   <div>ETA: <span style={{ color: dimColor }}>{Math.ceil(pendingQuote.quote.estimatedDuration / 60)} min</span></div>
                 )}
