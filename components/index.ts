@@ -30,9 +30,15 @@ export type { OfficeSnapshot } from './OfficeReplay';
 export { BattleModal, BattleButton, useBattle } from './AgentBattle';
 export type { Battle, BattleArgument, BattleRecord } from './AgentBattle';
 
-// 💰 Agent Payroll
+// 💰 Agent Payroll (incl. Trails cross-chain)
 export { PayAgentButton, PayAgentModal, PAYROLL_TOKENS } from './AgentPayroll';
-export type { PayrollToken, PaymentMethod, PayrollResult } from './AgentPayroll';
+export type { PayrollToken, TrailsSourceChain, PaymentMethod, PayrollResult } from './AgentPayroll';
+
+// 🌉 Trails — Fund Bankr Wallet (cross-chain on-ramp via Trails widget)
+export { FundBankrWalletButton, FundBankrWalletModal } from './FundBankrWalletButton';
+
+// 💎 Trails — Yield Vault discovery (Aave / Morpho)
+export { AgentYieldVaultButton, AgentYieldVaultModal } from './AgentYieldVault';
 
 // 🐾 Office Pet — Bankr Bot mascot
 export { OfficePet } from './OfficePet';
