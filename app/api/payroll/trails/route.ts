@@ -6,20 +6,26 @@ import { NextResponse } from 'next/server';
  *
  * POST /api/payroll/trails
  *
- * Three actions in one route, selected by `action` field:
+ * Four actions in one route, selected by `action` field:
  *
- * 1. action: "quote"
+ * 1. action: "get-wallet"
+ *    Body: { bankrApiKey }
+ *    -> Proxies api.bankr.bot/agent/me to fetch the EVM wallet address.
+ *       MUST be server-side because Bankr does not send CORS headers,
+ *       so a direct browser fetch fails with "Failed to fetch".
+ *
+ * 2. action: "quote"
  *    Body: { trailsApiKey, ownerAddress, originChainId, originTokenAddress,
  *            originTokenAmount, destinationChainId, destinationTokenAddress,
  *            destinationToAddress, slippageTolerance }
  *    -> Returns the Trails intent + depositTransaction (no commitment yet)
  *
- * 2. action: "execute"
+ * 3. action: "execute"
  *    Body: { trailsApiKey, intent, bankrApiKey, agentName, amount, token }
  *    -> Commits the intent, sends the depositTransaction via Bankr's prompt API,
  *       then notifies Trails (ExecuteIntent) and polls WaitIntentReceipt.
  *
- * 3. action: "earn-pools"
+ * 4. action: "earn-pools"
  *    Body: { trailsApiKey, chainIds }
  *    -> Read-only: discovers active yield pools (Aave, Morpho) for display.
  *
@@ -80,6 +86,33 @@ async function waitForIntent(intentId: string, apiKey: string, maxAttempts = 60)
 }
 
 // ─── Action handlers ─────────────────────────────────────────────────────────
+
+async function handleGetWallet(body: any) {
+  const { bankrApiKey } = body;
+  if (!bankrApiKey) {
+    return NextResponse.json({ error: 'Missing bankrApiKey' }, { status: 400 });
+  }
+  if (!bankrApiKey.startsWith('bk_')) {
+    return NextResponse.json({ error: 'Invalid Bankr API key format' }, { status: 400 });
+  }
+
+  const res = await fetch(`${BANKR_API}/me`, {
+    headers: { 'X-API-Key': bankrApiKey },
+  });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    return NextResponse.json(
+      { error: `Bankr returned ${res.status}: ${errText || 'unauthorized?'}` },
+      { status: res.status === 401 || res.status === 403 ? res.status : 502 },
+    );
+  }
+  const data = await res.json();
+  const evmWallet = (data.wallets || []).find((w: any) => w.chain === 'evm');
+  if (!evmWallet?.address) {
+    return NextResponse.json({ error: 'No EVM wallet found in Bankr account' }, { status: 404 });
+  }
+  return NextResponse.json({ success: true, address: evmWallet.address });
+}
 
 async function handleQuote(body: any) {
   const {
@@ -217,12 +250,13 @@ export async function POST(request: Request) {
     const body = await request.json();
     const action = body.action;
 
+    if (action === 'get-wallet') return await handleGetWallet(body);
     if (action === 'quote') return await handleQuote(body);
     if (action === 'execute') return await handleExecute(body);
     if (action === 'earn-pools') return await handleEarnPools(body);
 
     return NextResponse.json(
-      { error: `Unknown action: ${action}. Expected 'quote', 'execute', or 'earn-pools'.` },
+      { error: `Unknown action: ${action}. Expected 'get-wallet', 'quote', 'execute', or 'earn-pools'.` },
       { status: 400 },
     );
   } catch (error: any) {
