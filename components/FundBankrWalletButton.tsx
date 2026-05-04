@@ -22,7 +22,6 @@ import { createPortal } from 'react-dom';
  * No on-chain code runs in this component. It is purely a URL builder.
  */
 
-const BANKR_API = 'https://api.bankr.bot/agent';
 const SESSION_KEY = 'clawharbor_bankr_key';
 const TRAILS_KEY_SESSION = 'clawharbor_trails_key';
 const TRAILS_WIDGET = 'https://demo.trails.build/';
@@ -56,17 +55,22 @@ const DESTINATION_PRESETS = [
 
 type DestinationPreset = typeof DESTINATION_PRESETS[number];
 
-// ─── Bankr wallet fetcher ────────────────────────────────────────────────────
+// ─── Bankr wallet fetcher (via server proxy) ─────────────────────────────────
+// Bankr API does not send CORS headers, so a direct browser fetch fails with
+// "Failed to fetch". We route through /api/payroll/trails (action: get-wallet).
 
 async function fetchBankrWallet(apiKey: string): Promise<string> {
-  const res = await fetch(`${BANKR_API}/me`, {
-    headers: { 'X-API-Key': apiKey },
+  const res = await fetch('/api/payroll/trails', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'get-wallet', bankrApiKey: apiKey }),
   });
-  if (!res.ok) throw new Error(`Bankr returned ${res.status}`);
   const data = await res.json();
-  const evmWallet = (data.wallets || []).find((w: any) => w.chain === 'evm');
-  if (!evmWallet?.address) throw new Error('No EVM wallet found in Bankr account');
-  return evmWallet.address;
+  if (!res.ok || data.error) {
+    throw new Error(data.error || `Wallet lookup failed (${res.status})`);
+  }
+  if (!data.address) throw new Error('No EVM wallet found in Bankr account');
+  return data.address;
 }
 
 // ─── URL builder ─────────────────────────────────────────────────────────────
