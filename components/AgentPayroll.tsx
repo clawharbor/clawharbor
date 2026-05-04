@@ -18,7 +18,6 @@ import type { Agent } from './types';
  * Supported tokens (Base): USDC, ETH, BNKR, HARBOR
  */
 
-const BANKR_API = 'https://api.bankr.bot/agent';
 const SESSION_KEY = 'clawharbor_bankr_key';
 const TRAILS_KEY_SESSION = 'clawharbor_trails_key';
 
@@ -197,14 +196,18 @@ async function executeTrails(args: {
   };
 }
 
-// Look up the Bankr wallet address from the user's Bankr API key.
+// Look up the Bankr wallet address from the user's Bankr API key, via server
+// proxy (Bankr API does not send CORS headers — direct browser fetch fails).
 async function fetchBankrWallet(bankrApiKey: string): Promise<string> {
-  const res = await fetch(`${BANKR_API}/me`, { headers: { 'X-API-Key': bankrApiKey } });
-  if (!res.ok) throw new Error(`Bankr returned ${res.status}`);
+  const res = await fetch('/api/payroll/trails', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'get-wallet', bankrApiKey }),
+  });
   const data = await res.json();
-  const evm = (data.wallets || []).find((w: any) => w.chain === 'evm');
-  if (!evm?.address) throw new Error('No EVM wallet in Bankr account');
-  return evm.address;
+  if (!res.ok || data.error) throw new Error(data.error || `Wallet lookup failed (${res.status})`);
+  if (!data.address) throw new Error('No EVM wallet in Bankr account');
+  return data.address;
 }
 
 // ─── Wallet Direct (window.ethereum) ─────────────────────────────────────────
